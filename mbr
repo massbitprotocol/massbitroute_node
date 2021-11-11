@@ -1,0 +1,121 @@
+#!/bin/bash
+DIR=$(dirname $(realpath $0))
+NODE_CONF_TMPL=$DIR/http.d/massbit/massbitroute/node.conf.tmpl
+NODE_CONF=$DIR/http.d/massbit/massbitroute/node.conf
+VAR=$DIR/vars
+MBRNETWORK=$(cat $VAR/MBRNETWORK)
+if [ -z "$MBRNETWORK" ]; then MBRNETWORK=mainnet; fi
+MBRAPI=https://dapi.massbit.io
+#MBRAPI=http://admin.massbitroute.local
+
+if [ ! -d "$VAR" ]; then
+	mkdir $VAR
+fi
+
+cd $DIR
+echo $DIR >$VAR/SITE_ROOT
+mkdir -p $DIR/tmp $DIR/logs $DIR/data
+node_init() {
+	val=$(cat vars/SITE_ROOT | sed 's/\//\\\//g')
+	sed "s/_SITE_ROOT_/$val/g" nginx.conf.tmpl >nginx.conf
+
+	if [ ! -x "/usr/local/openresty" ]; then
+		ln -sf $DIR/bin/openresty /usr/local/openresty
+	fi
+	sed "s/_SITE_ROOT_/$val/g" mbr_node.conf.tmpl >/etc/supervisor/conf.d/mbr_node.conf
+	supervisorctl update
+}
+node_apply() {
+	node_init
+	machine_id=$(cat $VAR/NODE_ID)
+	mbrnodekey=$(cat $VAR/NODE_KEY)
+
+	cp $NODE_CONF_TMPL $NODE_CONF
+	ls vars | while read key; do
+		val=$(cat vars/$key | sed 's/\//\\\//g')
+		sed "s/_${key}_/$val/g" -i $NODE_CONF
+	done
+
+	if [ ! -f "$DIR/etc/htpasswd" ]; then
+		htpasswd -cb etc/htpasswd $machine_id $mbrnodekey
+	else
+		htpasswd -b etc/htpasswd $machine_id $mbrnodekey
+	fi
+
+	$DIR/scripts/run _reload
+}
+node_getkey() {
+	machine_id=$(cat /var/lib/dbus/machine-id)
+	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
+	echo $machine_id >$VAR/NODE_ID
+	echo $mbrnodekey >$VAR/NODE_KEY
+	echo "NODE_ID: $machine_id"
+	echo "NODE_KEY: $mbrnodekey"
+
+}
+node_show() {
+	ls vars | while read key; do
+		val=$(cat vars/$key | sed 's/\//\\\//g')
+		echo "$key: $val"
+	done
+}
+node_register() {
+	machine_id=$(cat $VAR/NODE_ID)
+	mbrnodekey=$(cat $VAR/NODE_KEY)
+
+	# machine_id=$(cat /var/lib/dbus/machine-id)
+	# mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
+	# echo $machine_id >$VAR/NODE_ID
+	# echo $mbrnodekey >$VAR/NODE_KEY
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	curl -s \
+		-X POST \
+		-H "Content-Type: application/json" \
+		-H "mbrnodekey: $mbrnodekey" \
+		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"mbrnodeid\":\"$machine_id\"}" \
+		"$MBRAPI/api/v1?action=node.register"
+	node_apply
+}
+node_unregister() {
+	machine_id=$(cat $VAR/NODE_ID)
+	mbrnodekey=$(cat $VAR/NODE_KEY)
+
+	# machine_id=$(cat /var/lib/dbus/machine-id)
+	# mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
+	# echo $machine_id >$VAR/NODE_ID
+	# echo $mbrnodekey >$VAR/NODE_KEY
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	curl -s \
+		-X POST \
+		-H "Content-Type: application/json" \
+		-H "mbrnodekey: $mbrnodekey" \
+		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"mbrnodeid\":\"$machine_id\"}" \
+		"$MBRAPI/api/v1?action=node.unregister"
+	node_apply
+}
+
+node_set() {
+	key="$1"
+	val="$2"
+	echo "$val" >"$VAR/$key"
+	node_apply
+
+}
+node_get() {
+	key="$1"
+	cat "$VAR/$key"
+	echo
+
+}
+node_keys() {
+	ls "$VAR"
+}
+
+node() {
+	cmd=$1
+	shift
+	node_$cmd $@
+}
+$@

@@ -1,0 +1,57 @@
+map $http_x_api_key $api_realm {
+    default '';
+    _NODE_KEY_ mbr_node_admin;
+}
+server {
+    listen 80 default_server;
+    listen 443 ssl;
+    ssl_certificate _SITE_ROOT_/ssl/node.mbr.massbitroute.com/fullchain.pem;
+    ssl_certificate_key _SITE_ROOT_/ssl/node.mbr.massbitroute.com/privkey.pem;
+    server_name _;
+    return 444;
+}
+server {
+    listen 80;
+    listen 443 ssl;
+    ssl_certificate _SITE_ROOT_/ssl/node.mbr.massbitroute.com/fullchain.pem;
+    ssl_certificate_key _SITE_ROOT_/ssl/node.mbr.massbitroute.com/privkey.pem;
+    resolver 8.8.4.4 ipv6=off;
+    client_body_buffer_size 512K;
+    client_max_body_size 1G;
+    server_name _NODE_ID_.node.mbr.massbitroute.com localhost;
+    access_log _SITE_ROOT_/logs/nginx-access.log main_json_node;
+    error_log _SITE_ROOT_/logs/nginx-error.log debug;
+    # API keys verification
+    location = /authorize_apikey {
+        internal;
+        if ($api_realm = '') {
+            return 403; # Forbidden
+        }
+        if ($http_x_api_key = '') {
+            return 401; # Unauthorized
+        }
+        return 204; # OK
+    }
+    location /ping {
+        return 200 pong;
+    }
+    location / {
+        proxy_pass _PROXY_PROTO_://_PROXY_HOSTNAME__PROXY_PATH_;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection $connection_upgrade;
+        if ($request_method = OPTIONS) {
+            add_header Access-Control-Allow-Headers 'X-API-Key, Authorization';
+        }
+        satisfy any;
+        auth_request /authorize_apikey;
+    }
+    location /__internal_status_vhost/ {
+        # auth_basic 'MBR admin';
+        # auth_basic_user_file _SITE_ROOT_/etc/htpasswd;
+        vhost_traffic_status_bypass_limit on;
+        vhost_traffic_status_bypass_stats on;
+        vhost_traffic_status_display;
+        vhost_traffic_status_display_format html;
+    }
+}

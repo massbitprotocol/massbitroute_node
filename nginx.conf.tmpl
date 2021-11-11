@@ -1,0 +1,39 @@
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_http_link_func_module.so;
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_http_geoip2_module.so;
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_stream_geoip2_module.so;
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_http_vhost_traffic_status_module.so;
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_http_stream_server_traffic_status_module.so;
+load_module _SITE_ROOT_/bin/openresty/nginx/modules/ngx_stream_server_traffic_status_module.so;
+daemon off;
+user root;
+worker_processes auto;
+error_log _SITE_ROOT_/logs/nginx-error.log;
+pid _SITE_ROOT_/tmp/nginx.pid;
+events {
+    worker_connections 1024;
+}
+env BIND_ADDRESS;
+#
+http {
+    map_hash_max_size 128;
+    map_hash_bucket_size 128;
+    server_names_hash_bucket_size 128;
+    include _SITE_ROOT_/bin/openresty/nginx/conf/mime.types;
+    access_log _SITE_ROOT_/logs/nginx-access.log;
+    # tmp
+    client_body_temp_path _SITE_ROOT_/tmp/client_body_temp;
+    fastcgi_temp_path _SITE_ROOT_/tmp/fastcgi_temp;
+    proxy_temp_path _SITE_ROOT_/tmp/proxy_temp;
+    scgi_temp_path _SITE_ROOT_/tmp/scgi_temp;
+    uwsgi_temp_path _SITE_ROOT_/tmp/uwsgi_temp;
+    resolver 8.8.8.8 ipv6=off;
+    variables_hash_bucket_size 512;
+    map $http_upgrade $connection_upgrade {
+        default upgrade;
+        '' close;
+    }
+    log_format main_json_node escape=json '{' '"msec": "$msec", ' '"connection": "$connection", ' '"connection_requests": "$connection_requests", ' '"pid": "$pid", ' '"request_id": "$request_id", ' '"request_length": "$request_length", ' '"remote_addr": "$remote_addr", ' '"remote_user": "$remote_user", ' '"remote_port": "$remote_port", ' '"time_local": "$time_local", ' '"time_iso8601": "$time_iso8601", ' '"request": "$request", ' '"request_uri": "$request_uri", ' '"args": "$args", ' '"status": "$status", ' '"body_bytes_sent": "$body_bytes_sent", ' '"bytes_sent": "$bytes_sent", ' '"http_referer": "$http_referer", ' '"http_user_agent": "$http_user_agent", ' '"http_x_forwarded_for": "$http_x_forwarded_for", ' '"http_host": "$http_host", ' '"server_name": "$server_name", ' '"request_time": "$request_time", ' '"upstream": "$upstream_addr", ' '"upstream_connect_time": "$upstream_connect_time", ' '"upstream_header_time": "$upstream_header_time", ' '"upstream_response_time": "$upstream_response_time", ' '"upstream_response_length": "$upstream_response_length", ' '"upstream_cache_status": "$upstream_cache_status", ' '"ssl_protocol": "$ssl_protocol", ' '"ssl_cipher": "$ssl_cipher", ' '"scheme": "$scheme", ' '"request_method": "$request_method", ' '"server_protocol": "$server_protocol", ' '"pipe": "$pipe", ' '"gzip_ratio": "$gzip_ratio", ' '"request_body": "$request_body", ' '"http_cf_ray": "$http_cf_ray"' '}';
+    vhost_traffic_status_zone;
+    vhost_traffic_status_dump _SITE_ROOT_/data/vts.db;
+    include _SITE_ROOT_/http.d/*/*/*.conf;
+}
