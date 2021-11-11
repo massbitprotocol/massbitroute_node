@@ -45,7 +45,7 @@ node_apply() {
 	$DIR/scripts/run _reload
 }
 node_getkey() {
-	machine_id=$(cat /etc/machine-id)
+	machine_id=$(cat /var/lib/dbus/machine-id)
 	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
 	echo $machine_id >$VAR/NODE_ID
 	echo $mbrnodekey >$VAR/NODE_KEY
