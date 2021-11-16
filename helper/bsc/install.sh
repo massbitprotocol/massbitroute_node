@@ -2,7 +2,7 @@
 apt install -y unzip wget
 VERSION=v1.1.3
 # setup new user
-ETH_HOME=/home/ethereum/
+ETH_HOME=/home/bsc/
 ETH_USER=bsc
 SERVICE=/etc/systemd/system/bsc.service
 RUN_SCRIPT=/nodes/bsc/run.sh
@@ -15,7 +15,7 @@ wget https://github.com/binance-chain/bsc/releases/download/$VERSION/geth_linux 
 sudo mkdir "${ETH_HOME}"
 sudo adduser --disabled-password --gecos "" --home "${ETH_HOME}" "${ETH_USER}"
 # create systemd
-sudo cat > ${SERVICE} <<EOL
+sudo cat >${SERVICE} <<EOL
   [Unit]
       Description=BSC Node
       After=network.target
