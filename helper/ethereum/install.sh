@@ -12,7 +12,7 @@ chown ${ETH_USER}:${ETH_USER} -R /nodes/ethereum
 sudo mkdir "${ETH_HOME}"
 sudo adduser --disabled-password --gecos "" --home "${ETH_HOME}" "${ETH_USER}"
 # create systemd
-sudo cat > ${SERVICE} <<EOL
+sudo cat >${SERVICE} <<EOL
   [Unit]
       Description=Geth Node
       After=network.target
@@ -21,9 +21,9 @@ LimitNOFILE=700000
 LogRateLimitIntervalSec=0
       User=ethereum
       Group=ethereum
-      WorkingDirectory=/home/ethereum/
+      WorkingDirectory=/nodes/ethereum/
       Type=simple
-      ExecStart=/home/ethereum/run.sh
+      ExecStart=/nodes/ethereum/run.sh
       Restart=always
       RestartSec=10
       [Install]
