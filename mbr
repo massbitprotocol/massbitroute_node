@@ -1,41 +1,57 @@
 #!/bin/bash
 DIR=$(dirname $(realpath $0))
-NODE_CONF_TMPL=$DIR/http.d/massbit/massbitroute/node.conf.tmpl
-NODE_CONF=$DIR/http.d/massbit/massbitroute/node.conf
+NODE_CONF_HTTP_TMPL=$DIR/http.d/local
+NODE_CONF_TMPL=$DIR/http.d
+TYPE=node
+# NODE_CONF_TMPL=$DIR/http.d/massbit/massbitroute/gateway.conf.tmpl
+# NODE_CONF=$DIR/http.d/massbit/massbitroute/gateway.conf
 VAR=$DIR/vars
-MBRNETWORK=$(cat $VAR/MBRNETWORK)
-if [ -z "$MBRNETWORK" ]; then MBRNETWORK=mainnet; fi
-MBRAPI=https://dapi.massbit.io
-#MBRAPI=http://admin.massbitroute.local
+#MBRNETWORK=$(cat $VAR/MBRNETWORK)
+# if [ -z "$MBRNETWORK" ]; then MBRNETWORK=mainnet; fi
+if [ -z "$MBRAPI" ]; then
+	MBRAPI=https://dapi.massbit.io
+fi
 
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
 
 cd $DIR
+
 echo $DIR >$VAR/SITE_ROOT
 mkdir -p $DIR/tmp $DIR/logs $DIR/data
-node_init() {
+
+gw_init() {
+	find /tmp -iname '*.sock' -delete
 	val=$(cat vars/SITE_ROOT | sed 's/\//\\\//g')
 	sed "s/_SITE_ROOT_/$val/g" nginx.conf.tmpl >nginx.conf
 
 	if [ ! -x "/usr/local/openresty" ]; then
 		ln -sf $DIR/bin/openresty /usr/local/openresty
 	fi
-	sed "s/_SITE_ROOT_/$val/g" mbr_node.conf.tmpl >/etc/supervisor/conf.d/mbr_node.conf
+	sed "s/_SITE_ROOT_/$val/g" mbr_gateway.conf.tmpl >/etc/supervisor/conf.d/mbr_gateway.conf
+
 	supervisorctl update
 }
-node_apply() {
-	node_init
+
+gw_patch_conf() {
+	TMPL=$1
+	CONF=$2
+	if [ ! -f "$TMPL" ]; then return; fi
+	cp $TMPL $CONF
+	ls vars | while read key; do
+		val=$(cat vars/$key | sed 's/\//\\\//g')
+		sed "s/_${key}_/$val/g" -i $CONF
+	done
+}
+gw_apply() {
+	gw_init
 	machine_id=$(cat $VAR/NODE_ID)
 	mbrnodekey=$(cat $VAR/NODE_KEY)
 
-	cp $NODE_CONF_TMPL $NODE_CONF
-	ls vars | while read key; do
-		val=$(cat vars/$key | sed 's/\//\\\//g')
-		sed "s/_${key}_/$val/g" -i $NODE_CONF
+	for _f in gateway; do
+		gw_patch_conf $NODE_CONF_HTTP_TMPL/${_f}.conf.tmpl $NODE_CONF_HTTP_TMPL/${_f}.conf
 	done
-
 	if [ ! -f "$DIR/etc/htpasswd" ]; then
 		htpasswd -cb etc/htpasswd $machine_id $mbrnodekey
 	else
@@ -44,78 +60,89 @@ node_apply() {
 
 	$DIR/scripts/run _reload
 }
-node_getkey() {
+gw_getkey() {
 	machine_id=$(cat /var/lib/dbus/machine-id)
 	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
 	echo $machine_id >$VAR/NODE_ID
 	echo $mbrnodekey >$VAR/NODE_KEY
 	echo "NODE_ID: $machine_id"
 	echo "NODE_KEY: $mbrnodekey"
-
 }
-node_show() {
+gw_show() {
 	ls vars | while read key; do
 		val=$(cat vars/$key | sed 's/\//\\\//g')
 		echo "$key: $val"
 	done
 }
-node_register() {
-	machine_id=$(cat $VAR/NODE_ID)
-	mbrnodekey=$(cat $VAR/NODE_KEY)
-
-	# machine_id=$(cat /var/lib/dbus/machine-id)
-	# mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
-	# echo $machine_id >$VAR/NODE_ID
-	# echo $mbrnodekey >$VAR/NODE_KEY
+gw_ping() {
+	#	gw_apply
+	#	gw_nodekey
+	USER_ID=$(cat $VAR/USER_ID)
+	ID=$(cat $VAR/ID)
+	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	curl -s \
 		-X POST \
 		-H "Content-Type: application/json" \
-		-H "mbrnodekey: $mbrnodekey" \
-		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"mbrnodeid\":\"$machine_id\"}" \
-		"$MBRAPI/api/v1?action=node.register"
-	node_apply
-}
-node_unregister() {
-	machine_id=$(cat $VAR/NODE_ID)
-	mbrnodekey=$(cat $VAR/NODE_KEY)
+		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
+		"$MBRAPI/api/v1/?action=${TYPE}.ping"
 
-	# machine_id=$(cat /var/lib/dbus/machine-id)
-	# mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
-	# echo $machine_id >$VAR/NODE_ID
-	# echo $mbrnodekey >$VAR/NODE_KEY
+}
+gw_register() {
+	#	gw_apply
+	#	gw_nodekey
+	USER_ID=$(cat $VAR/USER_ID)
+	ID=$(cat $VAR/ID)
+	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	curl -s \
 		-X POST \
 		-H "Content-Type: application/json" \
-		-H "mbrnodekey: $mbrnodekey" \
-		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"mbrnodeid\":\"$machine_id\"}" \
-		"$MBRAPI/api/v1?action=node.unregister"
-	node_apply
-}
+		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
+		"$MBRAPI/api/v1/?action=${TYPE}.register"
 
-node_set() {
+}
+gw_unregister() {
+	#	gw_nodekey
+	machine_id=$(cat $VAR/NODE_ID)
+	mbrnodekey=$(cat $VAR/NODE_KEY)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	curl -s \
+		-X POST \
+		-H "Content-Type: application/json"
+
+	-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$machine_id\"}" \
+		"$MBRAPI/api/v1?action=${TYPE}.unregister"
+	#	gw_apply
+}
+gw_set() {
 	key="$1"
 	val="$2"
 	echo "$val" >"$VAR/$key"
-	node_apply
+	#node_apply
 
 }
-node_get() {
+gw_get() {
 	key="$1"
 	cat "$VAR/$key"
-	echo
+	#node_apply
 
 }
-node_keys() {
+gw_keys() {
 	ls "$VAR"
 }
 
+gateway() {
+	cmd=$1
+	shift
+	gw_$cmd $@
+}
 node() {
 	cmd=$1
 	shift
-	node_$cmd $@
+	gw_$cmd $@
 }
 $@
