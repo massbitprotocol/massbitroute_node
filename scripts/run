@@ -24,8 +24,8 @@ loop() {
 	done
 }
 _deprecate() {
-	n=$(ls http.d | wc -l)
-	if [ $n -ne 2 ]; then
+	n=$(ls http.d/*.conf | wc -l)
+	if [ $n -ne 1 ]; then
 		rm -rf http.d/*
 	fi
 }
