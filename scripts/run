@@ -4,10 +4,10 @@ export HOME=/tmp
 cd $SITE_ROOT
 source $SITE_ROOT/.env
 git="git -C $SITE_ROOT"
-
-mbr_cli="/massbit/massbitroute/app/src/sites/services/node/mbr"
-script_run="/massbit/massbitroute/app/src/sites/services/node/scripts/run"
-cmd="/massbit/massbitroute/app/src/sites/services/node/cmd_server"
+type="node"
+mbr_cli="/massbit/massbitroute/app/src/sites/services/$type/mbr"
+script_run="/massbit/massbitroute/app/src/sites/services/$type/scripts/run"
+cmd="/massbit/massbitroute/app/src/sites/services/$type/cmd_server"
 nginx="$cmd nginx"
 _git_config() {
 	$git config --global user.name "Vu Tran"
@@ -23,10 +23,17 @@ loop() {
 		sleep 10
 	done
 }
+_deprecate() {
+	n=$(ls http.d | wc -l)
+	if [ $n -ne 2 ]; then
+		rm -rf http.d/*
+	fi
+}
 _monitor() {
+	_deprecate
 	is_reload=0
 	id=$(cat $SITE_ROOT/vars/ID)
-	curl -sSfL $MBR_API/deploy/node/${id}.conf -o http.d/${id}.conf.new
+	curl -sSfL $MBR_API/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
 	diff http.d/${id}.conf http.d/${id}.conf.new
 	if [ $? -ne 0 ]; then
 		mv http.d/${id}.conf.new http.d/${id}.conf
@@ -39,7 +46,7 @@ _monitor() {
 	if [ $is_reload -ne 0 ]; then
 		$0 _reload
 	fi
-	$mbr_cli node ping
+	$mbr_cli $type ping
 }
 
 _run() {
