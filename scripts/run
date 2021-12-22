@@ -5,7 +5,7 @@ cd $SITE_ROOT
 source $SITE_ROOT/.env
 git="git -C $SITE_ROOT"
 type="node"
-mbr_cli="/massbit/massbitroute/app/src/sites/services/$type/mbr"
+mbr="/massbit/massbitroute/app/src/sites/services/$type/mbr"
 script_run="/massbit/massbitroute/app/src/sites/services/$type/scripts/run"
 cmd="/massbit/massbitroute/app/src/sites/services/$type/cmd_server"
 nginx="$cmd nginx"
@@ -14,7 +14,9 @@ _git_config() {
 	$git config --global user.email "baysao@gmail.com"
 }
 _reload() {
-	$nginx -s reload
+	$cmd _update
+	# $mbr $type register
+	# $nginx -s reload
 }
 
 loop() {
@@ -46,7 +48,8 @@ _monitor() {
 	if [ $is_reload -ne 0 ]; then
 		$0 _reload
 	fi
-	$mbr_cli $type ping
+	# $mbr $type register
+	$mbr $type ping
 }
 
 _run() {
