@@ -32,10 +32,16 @@ _deprecate() {
 	fi
 }
 _monitor() {
+	# $mbr $type register
+	mkdir -p http.d
 	_deprecate
 	is_reload=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	curl -sSfL $MBR_API/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+	if [ ! -f "http.d/${id}.conf" ]; then
+		touch http.d/${id}.conf
+	fi
+
 	diff http.d/${id}.conf http.d/${id}.conf.new
 	if [ $? -ne 0 ]; then
 		mv http.d/${id}.conf.new http.d/${id}.conf
@@ -45,11 +51,14 @@ _monitor() {
 	if [ $? -eq 0 ]; then
 		is_reload=1
 	fi
+
+	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+
 	if [ $is_reload -ne 0 ]; then
 		$0 _reload
 	fi
 	# $mbr $type register
-	$mbr $type ping
+	# $mbr $type ping
 }
 
 _run() {
