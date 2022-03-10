@@ -20,6 +20,12 @@ _git_config() {
 	$git config --global user.name "Vu Tran"
 	$git config --global user.email "baysao@gmail.com"
 }
+_send_log() {
+	id=$(cat $SITE_ROOT/vars/ID)
+	# curl -X POST https://monitor.mbr.massbitroute.com/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
+	curl -X POST https://monitor.mbr.massbitroute.com/upload/node/$id --data-binary @$debug_log
+}
+
 _debug() {
 	# pip install --upgrade pip
 
@@ -100,8 +106,7 @@ _debug() {
 	$cmd nginx -T >>$debug_log
 	>$nginx_error
 
-	id=$(cat $SITE_ROOT/vars/ID)
-	curl -X POST https://monitor.mbr.massbitroute.com/upload/node/$id --data-binary @$debug_log
+	_send_log
 }
 _reload() {
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
