@@ -5,7 +5,9 @@ Component using for routing traffic between all backend providers
 
 ## System requirement
 
-Currently we tested only Ubuntu 20.04 x64. Minimum requirement is 4 vCPU and 4G RAM, 40GB free space
+Currently we tested only Ubuntu 20.04 x64. Minimum requirement is 4 vCPU and 4G RAM, 40GB free space. 
+
+All command require `root` permission. 
 
 ### Public IP Address
 
