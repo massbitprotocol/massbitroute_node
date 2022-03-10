@@ -9,15 +9,11 @@ local _config = {
     templates = {},
     apps = {},
     supervisor = [[
-
-[program:mbr_node_monitor]
-command=/massbit/massbitroute/app/src/sites/services/node/scripts/run loop 
-directory=/massbit/massbitroute/app/src/sites/services/node
-redirect_stderr=true
-stdout_logfile=/massbit/massbitroute/app/src/sites/services/node/logs/mbr_node.log
+[program:monitor_client]
+command=/bin/bash _SITE_ROOT_/etc/mkagent/agents/push.sh _SITE_ROOT_
 autorestart=true
-
-
+redirect_stderr=true
+stdout_logfile=_SITE_ROOT_/logs/monitor_client.log
     ]]
 }
 return _config

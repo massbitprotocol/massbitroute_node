@@ -3,11 +3,8 @@ DIR=$(dirname $(realpath $0))
 NODE_CONF_HTTP_TMPL=$DIR/http.d/local
 NODE_CONF_TMPL=$DIR/http.d
 TYPE=node
-# NODE_CONF_TMPL=$DIR/http.d/massbit/massbitroute/gateway.conf.tmpl
-# NODE_CONF=$DIR/http.d/massbit/massbitroute/gateway.conf
 VAR=$DIR/vars
-#MBRNETWORK=$(cat $VAR/MBRNETWORK)
-# if [ -z "$MBRNETWORK" ]; then MBRNETWORK=mainnet; fi
+
 if [ -z "$MBRAPI" ]; then
 	MBRAPI=https://dapi.massbit.io
 fi
@@ -89,7 +86,58 @@ gw_ping() {
 		"$MBRAPI/api/v1/?action=${TYPE}.ping"
 
 }
+
+gw_nodeverify() {
+	#	gw_apply
+	#	gw_nodekey
+	USER_ID=$(cat $VAR/USER_ID)
+	ID=$(cat $VAR/ID)
+	TOKEN=$(cat $VAR/TOKEN)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	IP=$(cat $VAR/IP)
+	if [ -n "$IP" ]; then
+		IP=$(curl -s ipv4.icanhazip.com)
+		n=$(grep -o "\." <<<"$IP" | wc -l)
+		if [ $n -eq 3 ]; then
+			echo $IP >$VAR/IP
+		fi
+
+	fi
+
+	#echo "Your IP:$IP"
+
+	curl -s \
+		-X POST \
+		-H "Content-Type: application/json" \
+		-d "{\"ip\":\"$IP\",\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
+		"$MBRAPI/api/v1/?action=${TYPE}.nodeverify"
+
+}
+
 gw_register() {
+	#	gw_apply
+	#	gw_nodekey
+	if [ -f "$VAR/DATA_URI" ]; then
+		DATA_URI=$(cat $VAR/DATA_URI)
+	fi
+	if [ -z "$DATA_URI" ]; then
+		DATA_URI="http://127.0.0.1:8545"
+	fi
+
+	USER_ID=$(cat $VAR/USER_ID)
+	ID=$(cat $VAR/ID)
+	TOKEN=$(cat $VAR/TOKEN)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	curl -s \
+		-X POST \
+		-H "Content-Type: application/json" \
+		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\", \"data_url\":\"$DATA_URI\"}" \
+		"$MBRAPI/api/v1/?action=${TYPE}.register"
+
+}
+gw_unregister() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
@@ -101,22 +149,8 @@ gw_register() {
 		-X POST \
 		-H "Content-Type: application/json" \
 		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
-		"$MBRAPI/api/v1/?action=${TYPE}.register"
+		"$MBRAPI/api/v1/?action=${TYPE}.unregister"
 
-}
-gw_unregister() {
-	#	gw_nodekey
-	machine_id=$(cat $VAR/NODE_ID)
-	mbrnodekey=$(cat $VAR/NODE_KEY)
-	NETWORK=$(cat $VAR/NETWORK)
-	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	curl -s \
-		-X POST \
-		-H "Content-Type: application/json"
-
-	-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$machine_id\"}" \
-		"$MBRAPI/api/v1?action=${TYPE}.unregister"
-	#	gw_apply
 }
 gw_set() {
 	key="$1"
