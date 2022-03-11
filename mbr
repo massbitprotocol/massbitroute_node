@@ -5,13 +5,17 @@ NODE_CONF_TMPL=$DIR/http.d
 TYPE=node
 VAR=$DIR/vars
 
+if [ ! -d "$VAR" ]; then
+	mkdir $VAR
+fi
+APP_KEY=$(cat $VAR/APP_KEY)
+ID=$(cat $VAR/ID)
+MBRAPI=$(cat $VAR/MBRAPI)
+
 if [ -z "$MBRAPI" ]; then
 	MBRAPI=https://dapi.massbit.io
 fi
 
-if [ ! -d "$VAR" ]; then
-	mkdir $VAR
-fi
 
 cd $DIR
 
@@ -108,11 +112,9 @@ gw_nodeverify() {
 	#echo "Your IP:$IP"
 
 	curl -s \
-		-X POST \
 		-H "Content-Type: application/json" \
-		-d "{\"ip\":\"$IP\",\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
-		"$MBRAPI/api/v1/?action=${TYPE}.nodeverify"
-
+    -H "Authorization: $APP_KEY" \
+    "$MBRAPI/mbr/node/$ID/verify'"
 }
 
 gw_register() {
@@ -130,11 +132,11 @@ gw_register() {
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+
 	curl -s \
-		-X POST \
 		-H "Content-Type: application/json" \
-		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\", \"data_url\":\"$DATA_URI\"}" \
-		"$MBRAPI/api/v1/?action=${TYPE}.register"
+		-H "Authorization: $APP_KEY" \
+		"$MBRAPI/mbr/node/$ID/register'"
 
 }
 gw_unregister() {
@@ -145,11 +147,11 @@ gw_unregister() {
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+
 	curl -s \
-		-X POST \
 		-H "Content-Type: application/json" \
-		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
-		"$MBRAPI/api/v1/?action=${TYPE}.unregister"
+    -H "Authorization: $APP_KEY" \
+    "$MBRAPI/mbr/node/$ID/unregister'"
 
 }
 gw_set() {
