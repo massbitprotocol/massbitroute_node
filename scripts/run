@@ -2,7 +2,7 @@
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=/tmp
 cd $SITE_ROOT
-source $SITE_ROOT/.env
+#source $SITE_ROOT/.env
 git="git -C $SITE_ROOT"
 type="node"
 service_dir=/massbit/massbitroute/app/src/sites/services
@@ -124,20 +124,20 @@ _install() {
 	mkdir -p $service_dir $SITE_ROOT/etc $SITE_ROOT/logs
 
 	service=gbc
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git /massbit/massbitroute/app/$service
-	git -C /massbit/massbitroute/app/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	git clone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
+	git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
 
 	service=ssl
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	git clone "http://$user:$pass@${PRIVATE_GIT_DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
+	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@${PRIVATE_GIT_DOMAIN}/massbitroute/${service}.git"
 
 	service=mkagent
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git $SITE_ROOT/etc/$service
-	git -C $SITE_ROOT/etc/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
+	git -C $SITE_ROOT/etc/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_mkagent
 
-	service=$type
-	git clone http://$service:$pass@git.massbitroute.com/massbitroute/${service}.git $service_dir/$service
-	git -C $service_dir/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	#service=$type
+	#git clone https://github.com/massbitprotocol/massbitroute_node $service_dir/$service
+	#git -C $service_dir/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_node
 
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
