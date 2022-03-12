@@ -2,6 +2,12 @@
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=/tmp
 cd $SITE_ROOT
+VAR=$SITE_ROOT/vars
+
+if [ ! -d "$VAR" ]; then
+	mkdir $VAR
+fi
+DOMAIN=$(cat $VAR/DOMAIN)
 #source $SITE_ROOT/.env
 git="git -C $SITE_ROOT"
 type="node"
@@ -13,7 +19,7 @@ nginx="$cmd nginx"
 debug_log=$SITE_ROOT/logs/debug.log
 nginx_error=$SITE_ROOT/logs/nginx_error.log
 user=massbit
-pass=41d919e74993945a97972d147c4d01847e8bc1b6
+pass=c671e4ea06280e7a3f6f9aea6e8155fcde9bc703
 log_dir=/massbit/massbitroute/app/src/sites/services/$type/logs
 
 _git_config() {
@@ -22,8 +28,8 @@ _git_config() {
 }
 _send_log() {
 	id=$(cat $SITE_ROOT/vars/ID)
-	# curl -X POST https://monitor.mbr.massbitroute.com/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
-	curl -X POST https://monitor.mbr.massbitroute.com/upload/node/$id --data-binary @$debug_log
+	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
+	curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/$id --data-binary @$debug_log
 }
 
 _debug() {
@@ -128,8 +134,8 @@ _install() {
 	git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
 
 	service=ssl
-	git clone "http://$user:$pass@${PRIVATE_GIT_DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@${PRIVATE_GIT_DOMAIN}/massbitroute/${service}.git"
+	git clone "http://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
+	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@$git.{DOMAIN}/massbitroute/${service}.git"
 
 	service=mkagent
 	git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
