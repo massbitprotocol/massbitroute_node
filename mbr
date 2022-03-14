@@ -8,14 +8,10 @@ VAR=$DIR/vars
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
-APP_KEY=$(cat $VAR/APP_KEY)
-ID=$(cat $VAR/ID)
-MBRAPI=$(cat $VAR/MBRAPI)
 
-if [ -z "$MBRAPI" ]; then
-	MBRAPI=https://dapi.massbit.io
-fi
-
+#if [ -z "$MBRAPI" ]; then
+#	MBRAPI=https://dapi.massbit.io
+#fi
 
 cd $DIR
 
@@ -63,6 +59,7 @@ gw_apply() {
 }
 gw_getkey() {
 	machine_id=$(cat /var/lib/dbus/machine-id)
+	$MBRAPI=$(cat $VAR/$MBRAPI)
 	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
 	echo $machine_id >$VAR/NODE_ID
 	echo $mbrnodekey >$VAR/NODE_KEY
@@ -95,11 +92,13 @@ gw_nodeverify() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
-	ID=$(cat $VAR/ID)
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	IP=$(cat $VAR/IP)
+	ID=$(cat $VAR/ID)
+	APP_KEY=$(cat $VAR/APP_KEY)
+	MBRAPI=$(cat $VAR/MBRAPI)
 	if [ -n "$IP" ]; then
 		IP=$(curl -s ipv4.icanhazip.com)
 		n=$(grep -o "\." <<<"$IP" | wc -l)
@@ -128,11 +127,12 @@ gw_register() {
 	fi
 
 	USER_ID=$(cat $VAR/USER_ID)
-	ID=$(cat $VAR/ID)
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-
+	ID=$(cat $VAR/ID)
+	APP_KEY=$(cat $VAR/APP_KEY)
+    MBRAPI=$(cat $VAR/MBRAPI)
 	curl -s \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
@@ -143,11 +143,12 @@ gw_unregister() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
-	ID=$(cat $VAR/ID)
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-
+	ID=$(cat $VAR/ID)
+	APP_KEY=$(cat $VAR/APP_KEY)
+	MBRAPI=$(cat $VAR/MBRAPI)
 	curl -s \
 		-H "Content-Type: application/json" \
     -H "Authorization: $APP_KEY" \
