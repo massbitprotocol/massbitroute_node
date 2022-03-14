@@ -98,7 +98,7 @@ gw_nodeverify() {
 	IP=$(cat $VAR/IP)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
-	MBRAPI=$(cat $VAR/MBRAPI)
+	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	if [ -n "$IP" ]; then
 		IP=$(curl -s ipv4.icanhazip.com)
 		n=$(grep -o "\." <<<"$IP" | wc -l)
@@ -113,7 +113,7 @@ gw_nodeverify() {
 	curl -s \
 		-H "Content-Type: application/json" \
     -H "Authorization: $APP_KEY" \
-    "$MBRAPI/mbr/node/$ID/verify'"
+    "$PORTAL_URL/mbr/node/$ID/verify'"
 }
 
 gw_register() {
@@ -132,11 +132,11 @@ gw_register() {
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
-    MBRAPI=$(cat $VAR/MBRAPI)
+    PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	curl -s \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$MBRAPI/mbr/node/$ID/register'"
+		"$PORTAL_URL/mbr/node/$ID/register'"
 
 }
 gw_unregister() {
@@ -148,11 +148,11 @@ gw_unregister() {
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
-	MBRAPI=$(cat $VAR/MBRAPI)
+	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	curl -s \
 		-H "Content-Type: application/json" \
     -H "Authorization: $APP_KEY" \
-    "$MBRAPI/mbr/node/$ID/unregister'"
+    "$PORTAL_URL/mbr/node/$ID/unregister'"
 
 }
 gw_set() {
