@@ -8,10 +8,12 @@ VAR=$DIR/vars
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
-
-#if [ -z "$MBRAPI" ]; then
-#	MBRAPI=https://dapi.massbit.io
-#fi
+ENV=$(cat $VAR/ENV)
+if [ "x$ENV" == "x" ]; then
+        source $SITE_ROOT/.env
+else
+source $SITE_ROOT/.env.${ENV}
+fi
 
 cd $DIR
 
@@ -59,7 +61,6 @@ gw_apply() {
 }
 gw_getkey() {
 	machine_id=$(cat /var/lib/dbus/machine-id)
-	$MBRAPI=$(cat $VAR/$MBRAPI)
 	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
 	echo $machine_id >$VAR/NODE_ID
 	echo $mbrnodekey >$VAR/NODE_KEY
@@ -111,7 +112,7 @@ gw_nodeverify() {
 	#echo "Your IP:$IP"
 
 	curl -s \
-		-H "Content-Type: application/json" \
+	-H "Content-Type: application/json" \
     -H "Authorization: $APP_KEY" \
     "$PORTAL_URL/mbr/node/$ID/verify"
 }
@@ -151,8 +152,8 @@ gw_unregister() {
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	curl -s \
 		-H "Content-Type: application/json" \
-    -H "Authorization: $APP_KEY" \
-    "$PORTAL_URL/mbr/node/$ID/unregister"
+		-H "Authorization: $APP_KEY" \
+    	"$PORTAL_URL/mbr/node/$ID/unregister"
 
 }
 gw_set() {

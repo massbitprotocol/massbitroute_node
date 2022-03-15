@@ -7,8 +7,12 @@ VAR=$SITE_ROOT/vars
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
-DOMAIN=$(cat $VAR/DOMAIN)
-#source $SITE_ROOT/.env
+ENV=$(cat $VAR/ENV)
+if [ "x$ENV" == "x" ]; then
+  source $SITE_ROOT/.env
+else
+  source $SITE_ROOT/.env.${ENV}
+fi
 git="git -C $SITE_ROOT"
 type="node"
 service_dir=/massbit/massbitroute/app/src/sites/services
@@ -183,7 +187,7 @@ _monitor() {
 	# $mbr $type nodeverify
 	# $mbr $type register
 
-	curl -sSfL $MBR_API/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+	curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
