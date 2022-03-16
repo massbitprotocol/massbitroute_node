@@ -10,9 +10,9 @@ if [ ! -d "$VAR" ]; then
 fi
 ENV=$(cat $VAR/ENV)
 if [ "x$ENV" == "x" ]; then
-        source $SITE_ROOT/.env
+  source $DIR/.env
 else
-source $SITE_ROOT/.env.${ENV}
+  source $DIR/.env.${ENV}
 fi
 
 cd $DIR
