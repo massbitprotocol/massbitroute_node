@@ -139,7 +139,7 @@ _install() {
 
 	service=ssl
 	git clone "http://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@$git.${DOMAIN}/massbitroute/${service}.git"
+	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git"
 
 	service=mkagent
 	git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
