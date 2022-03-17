@@ -3,7 +3,7 @@ SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=/tmp
 cd $SITE_ROOT
 VAR=$SITE_ROOT/vars
-
+GITHUB_TRIES=10
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
@@ -129,21 +129,43 @@ _reload() {
 	# $mbr $type register
 	#	$nginx -s reload
 }
-
+_gitclone() {
+  repo=$1
+  dest=$2
+  shift 2
+  rem="$@"
+  cmd="git clone $repo $dest $rem"
+  $cmd
+  st=$?
+  i=0
+  while [ \( $i -lt $GITHUB_TRIES \) -a \( $st -ne 0 \) ]; do
+    echo "Can not clone code from github $repo. Retrying ${i}th ... !"
+    $cmd
+    st=$?
+    i=$((i + 1))
+  done
+  if [ $st -ne 0 ]; then
+    echo "Can not clone code from github $repo after $GITHUB_TRIES tries!"
+    exit 1
+  fi
+  git -C $dest remote set-url origin $repo
+}
 _install() {
 	mkdir -p $service_dir $SITE_ROOT/etc $SITE_ROOT/logs
 
 	service=gbc
-	git clone http://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
-	git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
+  _gitclone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
+	#git clone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
+	#git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
 
 	service=ssl
-	git clone "http://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin "http://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git"
+	git clone "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
+	git -C /etc/letsencrypt remote set-url origin "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git"
 
 	service=mkagent
-	git clone http://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
-	git -C $SITE_ROOT/etc/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_mkagent
+	_gitclone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
+	#git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
+	#git -C $SITE_ROOT/etc/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_mkagent
 
 	#service=$type
 	#git clone https://github.com/massbitprotocol/massbitroute_node $service_dir/$service
