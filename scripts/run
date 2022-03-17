@@ -214,7 +214,7 @@ _monitor() {
 	# fi
 
 	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-
+  sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
 	if [ $is_reload -ne 0 ]; then
 		$0 _reload
 	fi
