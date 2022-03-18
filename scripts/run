@@ -194,39 +194,42 @@ loop() {
 # 		rm -rf http.d/*
 # 	fi
 # }
+_load_config() {
+  mkdir -p http.d
+  # rm http.d/*
+  # _deprecate
+  is_reloading=0
+  id=$(cat $SITE_ROOT/vars/ID)
 
+  if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
+  echo $type >$SITE_ROOT/vars/TYPE
+
+  # $mbr $type nodeverify
+  # $mbr $type register
+
+  curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+  if [ ! -f "http.d/${id}.conf" ]; then
+  	touch http.d/${id}.conf
+  fi
+
+  diff http.d/${id}.conf http.d/${id}.conf.new
+  if [ $? -ne 0 ]; then
+  	mv http.d/${id}.conf.new http.d/${id}.conf
+  	is_reloading=1
+  fi
+  sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+  sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+  echo $is_reloading
+}
 _monitor() {
-
-	mkdir -p http.d
-	# rm http.d/*
-	# _deprecate
-	is_reload=0
-	id=$(cat $SITE_ROOT/vars/ID)
-
-	if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
-	echo $type >$SITE_ROOT/vars/TYPE
-
-	# $mbr $type nodeverify
-	# $mbr $type register
-
-	curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
-	if [ ! -f "http.d/${id}.conf" ]; then
-		touch http.d/${id}.conf
-	fi
-
-	diff http.d/${id}.conf http.d/${id}.conf.new
-	if [ $? -ne 0 ]; then
-		mv http.d/${id}.conf.new http.d/${id}.conf
-		is_reload=1
-	fi
-
+	is_reloading=$(_load_config)
 	for d in /massbit/massbitroute/app/gbc \
 		$SITE_ROOT \
 		$SITE_ROOT/etc/mkagent \
 		/etc/letsencrypt; do
 		git -C $d pull origin master | grep -i "updating"
 		if [ $? -eq 0 ]; then
-			is_reload=1
+			is_reloading=1
 		fi
 	done
 
@@ -235,14 +238,11 @@ _monitor() {
 	# 	is_reload=1
 	# fi
 
-	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-  sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
-	if [ $is_reload -ne 0 ]; then
+	if [ $is_reloading -ne 0 ]; then
 		$0 _reload
 	fi
 	# $mbr $type register
 	# $mbr $type ping
-
 }
 
 _run() {
