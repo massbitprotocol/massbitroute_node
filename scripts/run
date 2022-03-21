@@ -219,10 +219,11 @@ _load_config() {
   fi
   sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
   sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
-  echo $is_reloading
+  return $is_reloading
 }
 _monitor() {
-	is_reloading=$(_load_config)
+  _load_config
+	is_reloading=$?
 	for d in /massbit/massbitroute/app/gbc \
 		$SITE_ROOT \
 		$SITE_ROOT/etc/mkagent \
