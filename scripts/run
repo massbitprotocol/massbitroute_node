@@ -2,7 +2,17 @@
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=/tmp
 cd $SITE_ROOT
-source $SITE_ROOT/.env
+VAR=$SITE_ROOT/vars
+GITHUB_TRIES=10
+if [ ! -d "$VAR" ]; then
+	mkdir $VAR
+fi
+ENV=$(cat $VAR/ENV)
+if [ "x$ENV" == "x" ]; then
+  source $SITE_ROOT/.env
+else
+  source $SITE_ROOT/.env.${ENV}
+fi
 git="git -C $SITE_ROOT"
 type="node"
 service_dir=/massbit/massbitroute/app/src/sites/services
@@ -13,7 +23,7 @@ nginx="$cmd nginx"
 debug_log=$SITE_ROOT/logs/debug.log
 nginx_error=$SITE_ROOT/logs/nginx_error.log
 user=massbit
-pass=41d919e74993945a97972d147c4d01847e8bc1b6
+pass=c671e4ea06280e7a3f6f9aea6e8155fcde9bc703
 log_dir=/massbit/massbitroute/app/src/sites/services/$type/logs
 
 _git_config() {
@@ -22,8 +32,8 @@ _git_config() {
 }
 _send_log() {
 	id=$(cat $SITE_ROOT/vars/ID)
-	# curl -X POST https://monitor.mbr.massbitroute.com/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
-	curl -X POST https://monitor.mbr.massbitroute.com/upload/node/$id --data-binary @$debug_log
+	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
+	curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/$id --data-binary @$debug_log
 }
 
 _debug() {
@@ -119,25 +129,47 @@ _reload() {
 	# $mbr $type register
 	#	$nginx -s reload
 }
-
+_gitclone() {
+  repo=$1
+  dest=$2
+  shift 2
+  rem="$@"
+  cmd="git clone $repo $dest $rem"
+  $cmd
+  st=$?
+  i=0
+  while [ \( $i -lt $GITHUB_TRIES \) -a \( $st -ne 0 \) ]; do
+    echo "Can not clone code from github $repo. Retrying ${i}th ... !"
+    $cmd
+    st=$?
+    i=$((i + 1))
+  done
+  if [ $st -ne 0 ]; then
+    echo "Can not clone code from github $repo after $GITHUB_TRIES tries!"
+    exit 1
+  fi
+  git -C $dest remote set-url origin $repo
+}
 _install() {
 	mkdir -p $service_dir $SITE_ROOT/etc $SITE_ROOT/logs
 
 	service=gbc
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git /massbit/massbitroute/app/$service
-	git -C /massbit/massbitroute/app/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+  _gitclone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
+	#git clone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
+	#git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
 
 	service=ssl
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	git clone "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
+	git -C /etc/letsencrypt remote set-url origin "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git"
 
 	service=mkagent
-	git clone http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git $SITE_ROOT/etc/$service
-	git -C $SITE_ROOT/etc/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	_gitclone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
+	#git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
+	#git -C $SITE_ROOT/etc/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_mkagent
 
-	service=$type
-	git clone http://$service:$pass@git.massbitroute.com/massbitroute/${service}.git $service_dir/$service
-	git -C $service_dir/$service remote set-url origin http://$user:$pass@git.massbitroute.com/massbitroute/${service}.git
+	#service=$type
+	#git clone https://github.com/massbitprotocol/massbitroute_node $service_dir/$service
+	#git -C $service_dir/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_node
 
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
@@ -162,39 +194,43 @@ loop() {
 # 		rm -rf http.d/*
 # 	fi
 # }
+_load_config() {
+  mkdir -p http.d
+  # rm http.d/*
+  # _deprecate
+  is_reloading=0
+  id=$(cat $SITE_ROOT/vars/ID)
 
+  if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
+  echo $type >$SITE_ROOT/vars/TYPE
+
+  # $mbr $type nodeverify
+  # $mbr $type register
+
+  curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+  if [ ! -f "http.d/${id}.conf" ]; then
+  	touch http.d/${id}.conf
+  fi
+
+  diff http.d/${id}.conf http.d/${id}.conf.new
+  if [ $? -ne 0 ]; then
+  	mv http.d/${id}.conf.new http.d/${id}.conf
+  	is_reloading=1
+  fi
+  sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+  sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+  return $is_reloading
+}
 _monitor() {
-
-	mkdir -p http.d
-	# rm http.d/*
-	# _deprecate
-	is_reload=0
-	id=$(cat $SITE_ROOT/vars/ID)
-
-	if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
-	echo $type >$SITE_ROOT/vars/TYPE
-
-	# $mbr $type nodeverify
-	# $mbr $type register
-
-	curl -sSfL $MBR_API/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
-	if [ ! -f "http.d/${id}.conf" ]; then
-		touch http.d/${id}.conf
-	fi
-
-	diff http.d/${id}.conf http.d/${id}.conf.new
-	if [ $? -ne 0 ]; then
-		mv http.d/${id}.conf.new http.d/${id}.conf
-		is_reload=1
-	fi
-
+  _load_config
+	is_reloading=$?
 	for d in /massbit/massbitroute/app/gbc \
 		$SITE_ROOT \
 		$SITE_ROOT/etc/mkagent \
 		/etc/letsencrypt; do
 		git -C $d pull origin master | grep -i "updating"
 		if [ $? -eq 0 ]; then
-			is_reload=1
+			is_reloading=1
 		fi
 	done
 
@@ -203,14 +239,11 @@ _monitor() {
 	# 	is_reload=1
 	# fi
 
-	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-
-	if [ $is_reload -ne 0 ]; then
+	if [ $is_reloading -ne 0 ]; then
 		$0 _reload
 	fi
 	# $mbr $type register
 	# $mbr $type ping
-
 }
 
 _run() {
