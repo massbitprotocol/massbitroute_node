@@ -1,252 +1,87 @@
 #!/bin/bash
+TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
-export HOME=/tmp
+export HOME=$SITE_ROOT
 cd $SITE_ROOT
-VAR=$SITE_ROOT/vars
-GITHUB_TRIES=10
-if [ ! -d "$VAR" ]; then
-	mkdir $VAR
-fi
-ENV=$(cat $VAR/ENV)
-if [ "x$ENV" == "x" ]; then
-  source $SITE_ROOT/.env
-else
-  source $SITE_ROOT/.env.${ENV}
-fi
-git="git -C $SITE_ROOT"
-type="node"
-service_dir=/massbit/massbitroute/app/src/sites/services
-mbr="$service_dir/$type/mbr"
-script_run="$service_dir/$type/scripts/run"
-cmd="$service_dir/$type/cmd_server"
-nginx="$cmd nginx"
-debug_log=$SITE_ROOT/logs/debug.log
-nginx_error=$SITE_ROOT/logs/nginx_error.log
-user=massbit
-pass=c671e4ea06280e7a3f6f9aea6e8155fcde9bc703
-log_dir=/massbit/massbitroute/app/src/sites/services/$type/logs
+source $SITE_ROOT/scripts/base.sh
+_load_env $SITE_ROOT
 
-_git_config() {
-	$git config --global user.name "Vu Tran"
-	$git config --global user.email "baysao@gmail.com"
-}
-_send_log() {
-	id=$(cat $SITE_ROOT/vars/ID)
-	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
-	curl -X POST https://monitor.mbr.${DOMAIN}/upload/node/$id --data-binary @$debug_log
-}
+REPOS="/massbit/massbitroute/app/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git \
+$SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git \
+$SITE_ROOT/etc/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git"
 
 _debug() {
-	# pip install --upgrade pip
-
-	find $log_dir -type f -name '*.log*' -exec truncate -s 0 {} \;
-
-	for f in $log_dir/stat--* /etc/supervisor/conf.d/mbr_node.conf; do
-		rm $f
-	done
-
-	echo "$(date)" >$debug_log
-
-	echo "--OS" >>$debug_log
-	cat /etc/lsb-release >>$debug_log
-	mid=$(cat /etc/machine-id)
-	echo "machine_id:$mid" >>$debug_log
-	_sc=$SITE_ROOT/scripts/debug/${mid}.sh
-	if [ -f "$_sc" ]; then
-		bash $_sc >>$debug_log
-	fi
-
-	# if [ "$mid" = "ebbc904307534a7bb228c852ccc4c6c5" ]; then
-	# 	echo "it me" >>$debug_log
-	# 	supervisorctl stop mbr_node >>$debug_log
-	# 	kill $(ps -ef | grep python_env/gbc/bin/supervisord | grep -v grep | awk '{print $2}')
-	# 	supervisorctl start mbr_node
-	# fi
-
-	echo "--Git" >>$debug_log
-	for d in $SITE_ROOT $SITE_ROOT/etc/mkagent /massbit/massbitroute/app/gbc /etc/letsencrypt; do
-		echo "git dir:$d" >>$debug_log
-		git -C $d remote -v >>$debug_log
-		git -C $d pull >>$debug_log
-	done
-
-	echo "----Vars" >>$debug_log
-	find $SITE_ROOT/vars -type f | while read f; do echo $f $(cat $f) >>$debug_log; done
-	echo "----ENV" >>$debug_log
-	cat $SITE_ROOT/.env >>$debug_log
-	echo >>$debug_log
-
-	curl -I https://dapi.massbit.io >>$debug_log
-	echo "----Firewall" >>$debug_log
-	iptables -nL >>$debug_log
-	echo "----DNS resolve" >>$debug_log
-	cat /etc/resolv.conf >>$debug_log
-	echo "----Services" >>$debug_log
-	supervisorctl status >>$debug_log
-	$cmd status >>$debug_log
-	echo "----Supervisor" >>$debug_log
-	ls /etc/supervisor/conf.d/ >>$debug_log
-	echo "--Netstat" >>$debug_log
-	if [ ! -f "/usr/bin/netstat" ]; then apt-get install -y net-tools; fi
-	netstat -tunalp | grep -i listen >>$debug_log
-	echo "--Verify" >>$debug_log
-	#	$mbr $type register >>$debug_log
-	$mbr $type nodeverify >>$debug_log
-
-	echo "--Processs" >>$debug_log
-	pstree >>$debug_log
-	ps -efx >>$debug_log
-	# ps -efx --forest >>$debug_log
-	# ps -efx --forest >>$debug_log
-
-	# echo "--Test" >>$debug_log
-	# ps -ef | grep 'loop monitor' >>$debug_log
-
-	echo "--Data URI" >>$debug_log
-	source_uri=$(cat $SITE_ROOT/vars/DATA_URI)
-	timeout 10 curl --location --request POST $source_uri --header 'Content-Type: application/json' \
-		--data-raw '{"id": "blockNumber", "jsonrpc": "2.0", "method": "eth_getBlockByNumber", "params": ["latest", false]}' 2>&1 >>$debug_log
-
-	echo >>$debug_log
-	echo "--Verify" >>$debug_log
-	$mbr $type nodeverify >>$debug_log
-	echo "----Nginx" >>$debug_log
-	$cmd nginx -t 2>&1 >>$debug_log
-	echo $? >>$debug_log
-	$cmd nginx -T >>$debug_log
-	>$nginx_error
-
-	_send_log
+	timeout 60 $SITE_ROOT/scripts/debug.sh
 }
-_reload() {
-	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
-	# $cmd restart stat_monitor_client
-	_debug
-	# kill $(ps -ef | grep -v grep | grep -i push.sh | awk '{print $2}')
-	$cmd _update
-	$cmd update
-	# $cmd start all
-	# $mbr $type register
-	#	$nginx -s reload
-}
-_gitclone() {
-  repo=$1
-  dest=$2
-  shift 2
-  rem="$@"
-  cmd="git clone $repo $dest $rem"
-  $cmd
-  st=$?
-  i=0
-  while [ \( $i -lt $GITHUB_TRIES \) -a \( $st -ne 0 \) ]; do
-    echo "Can not clone code from github $repo. Retrying ${i}th ... !"
-    $cmd
-    st=$?
-    i=$((i + 1))
-  done
-  if [ $st -ne 0 ]; then
-    echo "Can not clone code from github $repo after $GITHUB_TRIES tries!"
-    exit 1
-  fi
-  git -C $dest remote set-url origin $repo
-}
+
 _install() {
-	mkdir -p $service_dir $SITE_ROOT/etc $SITE_ROOT/logs
-
-	service=gbc
-  _gitclone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
-	#git clone https://github.com/massbitprotocol/massbitroute_gbc /massbit/massbitroute/app/$service
-	#git -C /massbit/massbitroute/app/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_gbc
-
-	service=ssl
-	git clone "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git" /etc/letsencrypt
-	git -C /etc/letsencrypt remote set-url origin "https://$user:$pass@git.${DOMAIN}/massbitroute/${service}.git"
-
-	service=mkagent
-	_gitclone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
-	#git clone https://github.com/massbitprotocol/massbitroute_mkagent $SITE_ROOT/etc/$service
-	#git -C $SITE_ROOT/etc/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_mkagent
-
-	#service=$type
-	#git clone https://github.com/massbitprotocol/massbitroute_node $service_dir/$service
-	#git -C $service_dir/$service remote set-url origin https://github.com/massbitprotocol/massbitroute_node
+	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs $SITE_ROOT/db $SITE_ROOT/tmp
+	_git_config
+	for _pathgit in $REPOS; do
+		_path=$(echo $_pathgit | cut -d'|' -f1)
+		_url=$(echo $_pathgit | cut -d'|' -f2)
+		_branch=$(echo $_pathgit | cut -d'|' -f3)
+		_git_clone $_url $_path $_branch
+	done
 
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
 	apt-get update
 	apt-get install -y git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev
-	mkdir -p /etc/supervisor/conf.d
-	cp supervisor.conf /etc/supervisor/conf.d/${type}.conf
 	systemctl enable supervisor
 	systemctl start supervisor
+	mkdir -p /etc/supervisor/conf.d
+	cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
 	supervisorctl update
 }
 
-loop() {
-	while true; do
-		$0 $@
-		sleep 3
-	done
-}
-# _deprecate() {
-# 	n=$(ls http.d/*.conf | wc -l)
-# 	if [ $n -ne 1 ]; then
-# 		rm -rf http.d/*
-# 	fi
-# }
 _load_config() {
-  mkdir -p http.d
-  # rm http.d/*
-  # _deprecate
-  is_reloading=0
-  id=$(cat $SITE_ROOT/vars/ID)
+	mkdir -p $SITE_ROOT/http.d
 
-  if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
-  echo $type >$SITE_ROOT/vars/TYPE
+	is_reloading=0
+	id=$(cat $SITE_ROOT/vars/ID)
 
-  # $mbr $type nodeverify
-  # $mbr $type register
+	if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
+	echo $type >$SITE_ROOT/vars/TYPE
 
-  curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
-  if [ ! -f "http.d/${id}.conf" ]; then
-  	touch http.d/${id}.conf
-  fi
+	curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+	if [ ! -f "http.d/${id}.conf" ]; then
+		touch http.d/${id}.conf
+	fi
 
-  diff http.d/${id}.conf http.d/${id}.conf.new
-  if [ $? -ne 0 ]; then
-  	mv http.d/${id}.conf.new http.d/${id}.conf
-  	is_reloading=1
-  fi
-  sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-  sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
-  return $is_reloading
+	diff http.d/${id}.conf http.d/${id}.conf.new
+	if [ $? -ne 0 ]; then
+		mv http.d/${id}.conf.new http.d/${id}.conf
+		is_reloading=1
+	fi
+	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+	return $is_reloading
+}
+_reload() {
+	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
+	_debug
+	$cmd _update
 }
 _monitor() {
-  _load_config
-	is_reloading=$?
-	for d in /massbit/massbitroute/app/gbc \
-		$SITE_ROOT \
-		$SITE_ROOT/etc/mkagent \
-		/etc/letsencrypt; do
-		git -C $d pull origin master | grep -i "updating"
-		if [ $? -eq 0 ]; then
-			is_reloading=1
-		fi
-	done
+	echo node >vars/TYPE
+	is_reload=0
+	_load_config
+	is_reload=$?
 
-	# $git pull | grep -i "updating"
-	# if [ $? -eq 0 ]; then
-	# 	is_reload=1
-	# fi
+	_update_sources $REPOS
+	if [ $is_reload -eq 0 ]; then
+		is_reload=$?
+	fi
 
-	if [ $is_reloading -ne 0 ]; then
+	if [ $is_reload -ne 0 ]; then
 		$0 _reload
 	fi
-	# $mbr $type register
-	# $mbr $type ping
+
 }
 
 _run() {
+	rm -rf $SITE_ROOT/tmp/*
 	$SITE_ROOT/start_server
 }
 
