@@ -41,8 +41,8 @@ _load_config() {
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 
-	if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
-	echo $type >$SITE_ROOT/vars/TYPE
+	# if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
+	# echo $type >$SITE_ROOT/vars/TYPE
 
 	curl -sSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new
 	if [ ! -f "http.d/${id}.conf" ]; then
