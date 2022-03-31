@@ -61,7 +61,7 @@ _load_config() {
 _reload() {
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
 	_debug
-	$cmd _update
+	$SITE_ROOT/cmd_server _update
 }
 _monitor() {
 	echo node >vars/TYPE
