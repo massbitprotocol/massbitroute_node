@@ -44,7 +44,7 @@ _load_config() {
 	if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
 	echo $type >$SITE_ROOT/vars/TYPE
 
-	curl -sSfL $MBRAPI/deploy/${type}conf/${id}.conf -o http.d/${id}.conf.new
+	curl -sSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
@@ -60,8 +60,8 @@ _load_config() {
 }
 _reload() {
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
-	_debug
 	$SITE_ROOT/cmd_server _update
+	_debug
 }
 _monitor() {
 	echo node >vars/TYPE
