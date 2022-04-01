@@ -2,8 +2,8 @@
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=$SITE_ROOT
-bash $SITE_ROOT/cmd_server _env
-source $SITE_ROOT/.env_raw
+if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
+if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
 
 source $SITE_ROOT/scripts/base.sh
 # _load_env $SITE_ROOT
@@ -16,6 +16,14 @@ $SITE_ROOT/etc/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git"
 
 _debug() {
 	timeout 60 $SITE_ROOT/scripts/debug.sh
+}
+
+_init() {
+	source $SITE_ROOT/.env
+	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
+	bash $SITE_ROOT/cmd_server _env
+	source $SITE_ROOT/.env_raw
+
 }
 
 _install() {
