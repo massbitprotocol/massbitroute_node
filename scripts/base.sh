@@ -23,10 +23,10 @@ _git_clone() {
 
 	if [ "$_dir/.git" ]; then
 		cd $_dir
-		git pull origin $_branch
+		git -C $_dir pull origin $_branch
 	else
 		git clone $_url $_dir -b $_branch
-		git branch --set-upstream-to=origin/$_branch
+		git -C $_dir branch --set-upstream-to=origin/$_branch
 	fi
 }
 _update_sources() {
