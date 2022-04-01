@@ -22,7 +22,6 @@ _git_clone() {
 	mkdir -p $_dir
 
 	if [ -d "$_dir/.git" ]; then
-		cd $_dir
 		git -C $_dir pull origin $_branch
 	else
 		git clone $_url $_dir -b $_branch
