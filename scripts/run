@@ -30,6 +30,7 @@ _init() {
 _install() {
 	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs $SITE_ROOT/db $SITE_ROOT/tmp
 	_git_config
+	_init
 	for _pathgit in $REPOS; do
 		_path=$(echo $_pathgit | cut -d'|' -f1)
 		_url=$(echo $_pathgit | cut -d'|' -f2)
