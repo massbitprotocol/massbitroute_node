@@ -21,7 +21,7 @@ _git_clone() {
 	# if [ -d "$_dir" ]; then rm -rf $_dir; fi
 	mkdir -p $_dir
 
-	if [ "$_dir/.git" ]; then
+	if [ -d "$_dir/.git" ]; then
 		cd $_dir
 		git -C $_dir pull origin $_branch
 	else
