@@ -22,6 +22,10 @@ _git_clone() {
 	mkdir -p $_dir
 	git clone $_url $_dir -b $_branch
 	git branch --set-upstream-to=origin/$_branch
+	if [ "$_dir/.git" ]; then
+		cd $_dir
+		git pull origin $_branch
+	fi
 }
 _update_sources() {
 	_git_config
