@@ -2,9 +2,12 @@
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=$SITE_ROOT
-cd $SITE_ROOT
+bash $SITE_ROOT/cmd_server _env
+source $SITE_ROOT/.env_raw
+
 source $SITE_ROOT/scripts/base.sh
-_load_env $SITE_ROOT
+# _load_env $SITE_ROOT
+cd $SITE_ROOT
 
 REPOS="/massbit/massbitroute/app/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git \
