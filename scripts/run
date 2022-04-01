@@ -10,6 +10,7 @@ source $SITE_ROOT/scripts/base.sh
 cd $SITE_ROOT
 
 GIT_PUBLIC_URL="https://github.com"
+
 REPOS="/massbit/massbitroute/app/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git \
 $SITE_ROOT/etc/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git"
