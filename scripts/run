@@ -19,6 +19,10 @@ _debug() {
 	timeout 60 $SITE_ROOT/scripts/debug.sh
 }
 
+_prepare() {
+	echo "Prepare"
+}
+
 _init() {
 	source $SITE_ROOT/.env
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
