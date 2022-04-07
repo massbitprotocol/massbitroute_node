@@ -14,6 +14,9 @@ local _config = {
 command=/bin/bash _SITE_ROOT_/../mkagent/agents/push.sh _SITE_ROOT_/../mkagent
 autorestart=true
 redirect_stderr=true
+stopasgroup=true
+killasgroup=true
+stopsignal=INT
 stdout_logfile=_SITE_ROOT_/../mkagent/logs/monitor_client.log
     ]]
     }
