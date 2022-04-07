@@ -34,6 +34,7 @@ _init() {
 _install() {
 	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp
 	_git_config
+	_prepare
 	_init
 	for _pathgit in $REPOS; do
 		_path=$(echo $_pathgit | cut -d'|' -f1)
@@ -81,14 +82,22 @@ _reload() {
 	$SITE_ROOT/cmd_server _update
 	_debug
 }
+
+_update() {
+	echo "Update"
+	st=0
+	_load_config
+	st=$?
+	return $st
+}
+
 _monitor() {
 	echo node >vars/TYPE
-	is_reload=0
-	_load_config
+	_update_sources $REPOS
 	is_reload=$?
 
-	_update_sources $REPOS
-	if [ $is_reload -eq 0 ]; then
+	_update
+	if [ $is_reload -ne 0 ]; then
 		is_reload=$?
 	fi
 
