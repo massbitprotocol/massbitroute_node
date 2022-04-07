@@ -9,11 +9,14 @@ source $SITE_ROOT/scripts/base.sh
 # _load_env $SITE_ROOT
 cd $SITE_ROOT
 
-GIT_PUBLIC_URL="https://github.com"
+mbr_root=/massbit/massbitroute/app
+service_dir=$mbr_root/src/sites/services
 
-REPOS="/massbit/massbitroute/app/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git \
-$SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git \
-$SITE_ROOT/etc/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git"
+GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=${MBR_ENV:-dev}
+REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
+$SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
+  $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
 
 _debug() {
 	timeout 60 $SITE_ROOT/scripts/debug.sh
