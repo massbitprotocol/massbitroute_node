@@ -14,9 +14,12 @@ service_dir=$mbr_root/src/sites/services
 
 GIT_PUBLIC_URL="https://github.com"
 export MBR_ENV=${MBR_ENV:-dev}
-REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
+_repo() {
+	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
   $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
+}
+_repo
 
 _debug() {
 	timeout 60 $SITE_ROOT/scripts/debug.sh
@@ -31,7 +34,7 @@ _init() {
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
 	bash $SITE_ROOT/cmd_server _env
 	source $SITE_ROOT/.env_raw
-
+	_repo
 }
 
 _install() {
