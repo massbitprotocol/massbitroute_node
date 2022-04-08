@@ -86,7 +86,7 @@ _load_config() {
 _reload() {
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
 	$SITE_ROOT/cmd_server _update
-	_debug
+	# _debug
 }
 
 _update() {
