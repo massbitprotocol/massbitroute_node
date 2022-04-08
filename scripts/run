@@ -103,8 +103,9 @@ _monitor() {
 	is_reload=$?
 
 	_update
+	_a_st=$?
 	if [ $is_reload -eq 0 ]; then
-		is_reload=$?
+		is_reload=$_a_st
 	fi
 
 	if [ $is_reload -ne 0 ]; then
