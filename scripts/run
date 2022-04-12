@@ -120,12 +120,12 @@ _monitor() {
 	# is_reload=$?
 
 	_update
-	is_reload=$?
+	_st_monitor=$?
 	# if [ $is_reload -eq 0 ]; then
 	# 	is_reload=$_a_st
 	# fi
 
-	if [ $is_reload -ne 0 ]; then
+	if [ $_st_monitor -ne 0 ]; then
 		$0 _reload
 	fi
 
