@@ -1,7 +1,9 @@
 #!/bin/bash
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
+
 export HOME=$SITE_ROOT
+
 if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
 if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
 
@@ -21,9 +23,9 @@ $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
 }
 _repo
 
-_debug() {
-	timeout 60 $SITE_ROOT/scripts/debug.sh
-}
+# _debug() {
+# 	timeout 60 $SITE_ROOT/scripts/debug.sh
+# }
 
 _prepare() {
 	echo "Prepare"
@@ -65,6 +67,7 @@ _load_config() {
 
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
+	if [ -z "$id" ]; then return $is_reloading; fi
 
 	# if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
 	# echo $type >$SITE_ROOT/vars/TYPE
@@ -89,24 +92,38 @@ _reload() {
 	# _debug
 }
 
+_update_repos() {
+	_repo
+	_update_sources $REPOS
+	_st_repo=$?
+	return $_st_repo
+}
+
 _update() {
 	echo "Update"
-	st=0
+	_st_update=0
+
+	_update_repos
+	_st_update=$?
+
 	_load_config
-	st=$?
+	if [ $_st_update -eq 0 ]; then
+		_st_update=$?
+	fi
+
 	return $st
 }
 
 _monitor() {
 	echo node >vars/TYPE
-	_update_sources $REPOS
-	is_reload=$?
+	# _update_sources $REPOS
+	# is_reload=$?
 
 	_update
-	_a_st=$?
-	if [ $is_reload -eq 0 ]; then
-		is_reload=$_a_st
-	fi
+	is_reload=$?
+	# if [ $is_reload -eq 0 ]; then
+	# 	is_reload=$_a_st
+	# fi
 
 	if [ $is_reload -ne 0 ]; then
 		$0 _reload
