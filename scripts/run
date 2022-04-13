@@ -27,16 +27,24 @@ _repo
 # 	timeout 60 $SITE_ROOT/scripts/debug.sh
 # }
 
-_prepare() {
-	echo "Prepare"
+_init() {
+	if [ ! -f "$SITE_ROOT/.env" ]; then
+		echo "$MBR_ENV" >$SITE_ROOT/.env
+	fi
 	source $SITE_ROOT/.env
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
 	bash $SITE_ROOT/cmd_server _env
 	source $SITE_ROOT/.env_raw
 	_repo
 }
+_prepare() {
+	echo "Prepare"
+	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
+
+}
 
 _install_repos() {
+	_git_config
 	_repo
 	for _pathgit in $REPOS; do
 		_path=$(echo $_pathgit | cut -d'|' -f1)
@@ -45,12 +53,7 @@ _install_repos() {
 		_git_clone $_url $_path $_branch
 	done
 }
-_install() {
-	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp
-	_git_config
-	_prepare
-	_install_repos
-
+_supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
 	apt-get update
@@ -61,6 +64,12 @@ _install() {
 	cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
 	supervisorctl update
 }
+_install() {
+	_init
+	_prepare
+	_install_repos
+	_supervisor
+}
 
 _load_config() {
 	mkdir -p $SITE_ROOT/http.d
@@ -68,9 +77,6 @@ _load_config() {
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
-
-	# if [ ! -d "$SITE_ROOT/vars" ]; then mkdir -p $SITE_ROOT/vars; fi
-	# echo $type >$SITE_ROOT/vars/TYPE
 
 	curl -sSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new
 	if [ ! -f "http.d/${id}.conf" ]; then
@@ -89,7 +95,6 @@ _load_config() {
 _reload() {
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
 	$SITE_ROOT/cmd_server _update
-	# _debug
 }
 
 _update_repos() {
@@ -111,19 +116,14 @@ _update() {
 		_st_update=$?
 	fi
 
-	return $st
+	return $_st_update
 }
 
 _monitor() {
 	echo node >vars/TYPE
-	# _update_sources $REPOS
-	# is_reload=$?
 
 	_update
 	_st_monitor=$?
-	# if [ $is_reload -eq 0 ]; then
-	# 	is_reload=$_a_st
-	# fi
 
 	if [ $_st_monitor -ne 0 ]; then
 		$0 _reload
