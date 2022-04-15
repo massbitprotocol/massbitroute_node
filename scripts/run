@@ -113,8 +113,9 @@ _update() {
 	_st_update=$?
 
 	_load_config
+	_st=$?
 	if [ $_st_update -eq 0 ]; then
-		_st_update=$?
+		_st_update=$_st
 	fi
 
 	return $_st_update
