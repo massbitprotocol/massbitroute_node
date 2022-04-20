@@ -9,12 +9,12 @@ if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
 if [ -f "$VAR/ENV" ]; then
-  ENV=$(cat $VAR/ENV)
+	ENV=$(cat $VAR/ENV)
 fi
 if [ "x$ENV" == "x" ]; then
-  source $DIR/.env
+	source $DIR/.env
 else
-  source $DIR/.env.${ENV}
+	source $DIR/.env.${ENV}
 fi
 
 cd $DIR
@@ -114,9 +114,10 @@ gw_nodeverify() {
 	#echo "Your IP:$IP"
 
 	curl -s \
-	-H "Content-Type: application/json" \
-    -H "Authorization: $APP_KEY" \
-    "$PORTAL_URL/mbr/node/$ID/verify"
+		-H "Content-Type: application/json" \
+		-H "Authorization: $APP_KEY" \
+		"$PORTAL_URL/mbr/node/$ID/verify" >$VAR/RAW
+	cat $VAR/RAW
 }
 
 gw_register() {
@@ -135,7 +136,7 @@ gw_register() {
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
-    PORTAL_URL=$(cat $VAR/PORTAL_URL)
+	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	curl -s \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
@@ -155,7 +156,7 @@ gw_unregister() {
 	curl -s \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-    	"$PORTAL_URL/mbr/node/$ID/unregister"
+		"$PORTAL_URL/mbr/node/$ID/unregister"
 
 }
 gw_set() {
