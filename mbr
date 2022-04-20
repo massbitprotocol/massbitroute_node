@@ -91,6 +91,35 @@ gw_ping() {
 
 }
 
+gw_nodeinfo() {
+	#	gw_apply
+	#	gw_nodekey
+	USER_ID=$(cat $VAR/USER_ID)
+	TOKEN=$(cat $VAR/TOKEN)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	IP=$(cat $VAR/IP)
+	ID=$(cat $VAR/ID)
+	APP_KEY=$(cat $VAR/APP_KEY)
+	PORTAL_URL=$(cat $VAR/PORTAL_URL)
+	if [ -n "$IP" ]; then
+		IP=$(curl -s ipv4.icanhazip.com)
+		n=$(grep -o "\." <<<"$IP" | wc -l)
+		if [ $n -eq 3 ]; then
+			echo $IP >$VAR/IP
+		fi
+
+	fi
+
+	#echo "Your IP:$IP"
+
+	curl -s \
+		-H "Content-Type: application/json" \
+		-H "Authorization: $APP_KEY" \
+		"$PORTAL_URL/mbr/node/$ID/info" >$VAR/RAW
+	cat $VAR/RAW
+}
+
 gw_nodeverify() {
 	#	gw_apply
 	#	gw_nodekey
@@ -116,8 +145,7 @@ gw_nodeverify() {
 	curl -s \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$PORTAL_URL/mbr/node/$ID/verify" >$VAR/RAW
-	cat $VAR/RAW
+		"$PORTAL_URL/mbr/node/$ID/verify"
 }
 
 gw_register() {
