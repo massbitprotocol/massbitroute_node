@@ -94,6 +94,10 @@ _load_config() {
 	return $is_reloading
 }
 _reload() {
+	systemctl | awk '/apt/{print $1}' | while read _s; do
+		systemctl stop $_s
+		systemctl disable $_s
+	done
 	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
 	$SITE_ROOT/cmd_server _update
 }
