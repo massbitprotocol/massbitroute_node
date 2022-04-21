@@ -7,3 +7,4 @@ db/
 /cache/
 /.env_raw
 /src/env.lua
+/http.d/
