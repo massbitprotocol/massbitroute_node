@@ -74,7 +74,7 @@ _install() {
 
 _load_config() {
 	mkdir -p $SITE_ROOT/http.d
-
+	$SITE_ROOT/mbr node nodeinfo
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
