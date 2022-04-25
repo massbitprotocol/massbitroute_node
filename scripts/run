@@ -27,6 +27,16 @@ _repo
 # 	timeout 60 $SITE_ROOT/scripts/debug.sh
 # }
 
+_tune() {
+	echo 2000000 >/proc/sys/fs/nr_open
+	echo 2000000 >/proc/sys/fs/file-max
+	ulimit -n 2000000
+	cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
+	cp /massbit/massbitroute/app/gbc/conf/.conf /etc/security/limits.d/mbr.conf
+	cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
+	sysctl -p
+}
+
 _init() {
 	if [ ! -f "$SITE_ROOT/.env" ]; then
 		echo "$MBR_ENV" >$SITE_ROOT/.env
@@ -94,6 +104,7 @@ _load_config() {
 	return $is_reloading
 }
 _reload() {
+	_tune
 	systemctl | awk '/apt/{print $1}' | while read _s; do
 		systemctl stop $_s
 		systemctl disable $_s
