@@ -104,7 +104,7 @@ _load_config() {
 	return $is_reloading
 }
 _reload() {
-	if [ ! -l "/etc/letsencrypt" ]; then
+	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
 		ln -sf /massbit/massbitroute/app/src/sites/services/node/ssl /etc/letsencrypt
 	fi
