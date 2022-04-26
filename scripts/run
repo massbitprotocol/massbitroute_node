@@ -32,7 +32,6 @@ _tune() {
 	echo 2000000 >/proc/sys/fs/file-max
 	ulimit -n 2000000
 	cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
-	cp /massbit/massbitroute/app/gbc/conf/.conf /etc/security/limits.d/mbr.conf
 	cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
 	sysctl -p
 }
