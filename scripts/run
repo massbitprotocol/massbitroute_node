@@ -148,8 +148,8 @@ _monitor() {
 	if [ $_st_monitor -ne 0 ]; then
 		$0 _reload
 	fi
-	cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
-	supervisorctl update
+	# cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
+	# supervisorctl update
 
 }
 
