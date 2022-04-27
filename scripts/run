@@ -88,7 +88,7 @@ _load_config() {
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
 
-	curl -sSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new
+	curl -skSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
