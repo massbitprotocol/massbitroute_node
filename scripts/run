@@ -112,7 +112,7 @@ _reload() {
 		systemctl stop $_s
 		systemctl disable $_s
 	done
-	$SITE_ROOT/etc/mkagent/agents/push.sh _kill
+	$service_dir/mkagent/agents/push.sh _kill
 	$SITE_ROOT/cmd_server _update
 }
 
