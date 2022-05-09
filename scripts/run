@@ -102,7 +102,21 @@ _load_config() {
 	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
 	return $is_reloading
 }
+_add_hosts() {
+	if [ ! -f "/etc/hosts.bk" ]; then
+		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
+	fi
+	cat /etc/hosts.bk >/tmp/hosts
+	curl -s https://dapi.$DOMAIN/deploy/info/hosts -o /tmp/hosts.1
+	if [ -f "/tmp/hosts.1" ]; then
+		cat /tmp/hosts.1 >>/tmp/hosts
+		cat /tmp/hosts >/etc/hosts
+		rm /tmp/hosts.1
+	fi
+}
+
 _reload() {
+	_add_hosts
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
 		ln -sf /massbit/massbitroute/app/src/sites/services/node/ssl /etc/letsencrypt
