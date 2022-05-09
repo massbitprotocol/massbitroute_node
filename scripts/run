@@ -48,7 +48,7 @@ _init() {
 }
 _prepare() {
 	echo "Prepare"
-	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
+	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/error $SITE_ROOT/logs/access $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
 	# rm -rf $SITE_ROOT/tmp/*
 
 }
@@ -124,6 +124,7 @@ _update_repos() {
 }
 
 _update() {
+	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
 	echo "Update"
 	_st_update=0
 
