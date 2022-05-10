@@ -82,13 +82,14 @@ _install() {
 }
 
 _load_config() {
+	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
 	mkdir -p $SITE_ROOT/http.d
 	# $SITE_ROOT/mbr node nodeinfo
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
 
-	curl -skSfL $MBRAPI/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
+	curl -skSfL $PORTAL_URL/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
@@ -107,7 +108,7 @@ _add_hosts() {
 		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
 	fi
 	cat /etc/hosts.bk >/tmp/hosts
-	curl -s https://dapi.$DOMAIN/deploy/info/hosts -o /tmp/hosts.1
+	curl -s $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
 	if [ -f "/tmp/hosts.1" ]; then
 		cat /tmp/hosts.1 >>/tmp/hosts
 		cat /tmp/hosts >/etc/hosts
