@@ -129,8 +129,11 @@ _reload() {
 		systemctl stop $_s
 		systemctl disable $_s
 	done
-	$service_dir/mkagent/agents/push.sh _kill
+	# $service_dir/mkagent/agents/push.sh _kill
+	pkill -f push.py
 	$SITE_ROOT/cmd_server _update
+	$SITE_ROOT/cmd_server update
+	$SITE_ROOT/cmd_server start all
 }
 
 _update_repos() {
