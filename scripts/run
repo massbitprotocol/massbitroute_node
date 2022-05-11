@@ -104,6 +104,7 @@ _load_config() {
 	return $is_reloading
 }
 _add_host_file() {
+	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
 	if [ ! -f "/etc/hosts.bk" ]; then
 		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
 	fi
