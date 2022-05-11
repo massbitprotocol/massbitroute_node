@@ -103,7 +103,7 @@ _load_config() {
 	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
 	return $is_reloading
 }
-_add_hosts() {
+_add_host_file() {
 	if [ ! -f "/etc/hosts.bk" ]; then
 		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
 	fi
@@ -117,7 +117,7 @@ _add_hosts() {
 }
 
 _reload() {
-	_add_hosts
+	_add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
 		ln -sf /massbit/massbitroute/app/src/sites/services/node/ssl /etc/letsencrypt
