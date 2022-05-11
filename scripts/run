@@ -108,6 +108,7 @@ _add_host_file() {
 	if [ ! -f "/etc/hosts.bk" ]; then
 		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
 	fi
+	sed '/</d' /etc/hosts -i /etc/hosts.bk
 	cat /etc/hosts.bk >/tmp/hosts
 	curl -s $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
 	if [ -f "/tmp/hosts.1" ]; then
