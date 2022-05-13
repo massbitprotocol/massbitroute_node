@@ -45,6 +45,10 @@ $SITE_ROOT/logs/*.log {
        compress
        notifempty
        missingok
+       sharedscripts
+        postrotate
+                [ -f $SITE_ROOT/tmp/nginx.pid ] && kill -USR1 $(cat $SITE_ROOT/tmp/nginx.pi)
+        endscript
 }
 EOF
 }
