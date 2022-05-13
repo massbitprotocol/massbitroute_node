@@ -47,7 +47,7 @@ $SITE_ROOT/logs/* {
        missingok
        sharedscripts
         postrotate
-                [ -f $SITE_ROOT/tmp/nginx.pid ] && kill -USR1 \$(cat $SITE_ROOT/tmp/nginx.pi)
+                [ -f $SITE_ROOT/tmp/nginx.pid ] && kill -USR1 \$(cat $SITE_ROOT/tmp/nginx.pid)
         endscript
 }
 EOF
