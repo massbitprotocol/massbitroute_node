@@ -34,6 +34,19 @@ _tune() {
 	cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
 	cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
 	sysctl -p
+	cat >/etc/logrotate.d/massbit <<EOF
+$SITE_ROOT/logs/error/*.log
+$SITE_ROOT/logs/access/*.log
+$SITE_ROOT/logs/nginx/*.log
+$SITE_ROOT/logs/*.log {
+       daily
+       rotate 7
+       delaycompress
+       compress
+       notifempty
+       missingok
+}
+EOF
 }
 
 _init() {
