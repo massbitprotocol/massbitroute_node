@@ -152,6 +152,7 @@ _reload() {
 		systemctl disable $_s
 	done
 	# $service_dir/mkagent/agents/push.sh _kill
+	pkill -f push.sh
 	pkill -f push.py
 	$SITE_ROOT/cmd_server _update
 	$SITE_ROOT/cmd_server update
