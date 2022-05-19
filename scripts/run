@@ -118,6 +118,8 @@ _load_config() {
 	fi
 	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
 	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+
+	$SITE_ROOT/cmd_server start all
 	return $is_reloading
 }
 _add_host_file() {
