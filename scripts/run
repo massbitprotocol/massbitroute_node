@@ -23,9 +23,9 @@ $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
 }
 _repo
 
-# _debug() {
-# 	timeout 60 $SITE_ROOT/scripts/debug.sh
-# }
+_debug() {
+	timeout 10 $SITE_ROOT/scripts/debug.sh
+}
 
 _tune() {
 	echo 2000000 >/proc/sys/fs/nr_open
@@ -161,7 +161,7 @@ _reload() {
 	$SITE_ROOT/cmd_server _update
 	$SITE_ROOT/cmd_server update
 	$SITE_ROOT/cmd_server start all
-
+	_debug
 }
 
 _update_repos() {
