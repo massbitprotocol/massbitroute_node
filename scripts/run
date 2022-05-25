@@ -137,10 +137,14 @@ _add_host_file() {
 }
 
 _reload() {
+	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
+		bash $SITE_ROOT/mbr node nodeinfo
+	fi
+
 	_add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
-		ln -sf /massbit/massbitroute/app/src/sites/services/node/ssl /etc/letsencrypt
+		ln -sf $SITE_ROOT/ssl /etc/letsencrypt
 	fi
 	_tune
 	if [ -f "/etc/logrotate.d/massbit" ]; then
