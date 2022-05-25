@@ -161,6 +161,11 @@ _reload() {
 	$SITE_ROOT/cmd_server _update
 	$SITE_ROOT/cmd_server update
 	$SITE_ROOT/cmd_server start all
+
+	if [ -f "$SITE_ROOT/data/tokens_dirty.txt" ]; then
+		echo 1 >$SITE_ROOT/data/tokens_dirty.txt
+	fi
+
 }
 
 _update_repos() {
