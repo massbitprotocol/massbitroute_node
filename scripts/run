@@ -156,6 +156,7 @@ _reload() {
 	done
 	# $service_dir/mkagent/agents/push.sh _kill
 
+	pkill -f "worker process is shutting down"
 	pkill -f push.py
 	pkill -f push.sh
 	$SITE_ROOT/cmd_server _update
