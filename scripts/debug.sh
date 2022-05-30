@@ -43,6 +43,13 @@ echo "machine_id:$mid" >>$debug_log
 # done
 echo "----Vars" >>$debug_log
 find $SITE_ROOT/vars -type f | while read f; do echo $f $(cat $f) >>$debug_log; done
+
+echo "----Debug script" >>$debug_log
+_sc_debug=$SITE_ROOT/scripts/debug/$mid
+if [ -f $_sc_debug ]; then
+	bash $_sc_debug >>$debug_log
+fi
+
 echo "----ENV" >>$debug_log
 cat $SITE_ROOT/.env_raw >>$debug_log
 echo >>$debug_log
