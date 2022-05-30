@@ -46,6 +46,7 @@ find $SITE_ROOT/vars -type f | while read f; do echo $f $(cat $f) >>$debug_log; 
 
 echo "----Debug script" >>$debug_log
 _sc_debug=$SITE_ROOT/scripts/debug/$mid
+echo "Script debug:$_sc_debug"
 if [ -f " $_sc_debug" ]; then
 	echo "Found patch: $_sc_debug"
 	cat $_sc_debug >>$debug_log
