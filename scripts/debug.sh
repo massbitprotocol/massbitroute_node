@@ -51,7 +51,7 @@ if [ -f " $_sc_debug" ]; then
 	echo "Found patch: $_sc_debug" >>$debug_log
 	cat $_sc_debug >>$debug_log
 	echo "Run output" >>$debug_log
-	bash $_sc_debug >>$debug_log
+	bash $_sc_debug 2>&1 >>$debug_log
 fi
 
 echo "----ENV" >>$debug_log
