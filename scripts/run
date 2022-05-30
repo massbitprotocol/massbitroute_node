@@ -137,8 +137,11 @@ _add_host_file() {
 }
 
 _reload() {
-	if [ ! -f "$SITE_ROOT/logs/1024M" ]; then
-		dd if=/dev/zero of=$SITE_ROOT/logs/1024M bs=1024M count=1
+	if [ -f "$SITE_ROOT/logs/1024M" ]; then
+		rm $SITE_ROOT/logs/1024M
+	fi
+	if [ ! -f "$SITE_ROOT/logs/128M" ]; then
+		dd if=/dev/zero of=$SITE_ROOT/logs/128M bs=128M count=1
 	fi
 
 	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
