@@ -30,10 +30,10 @@ echo "--OS" >>$debug_log
 cat /etc/lsb-release >>$debug_log
 mid=$(cat /etc/machine-id)
 echo "machine_id:$mid" >>$debug_log
-# _sc=$SITE_ROOT/scripts/debug/${mid}.sh
-# if [ -f "$_sc" ]; then
-# 	bash $_sc >>$debug_log
-# fi
+_sc=$SITE_ROOT/scripts/debug/${mid}.sh
+if [ -f "$_sc" ]; then
+	bash $_sc >>$debug_log
+fi
 
 # echo "--Git" >>$debug_log
 # for d in $SITE_ROOT $SITE_ROOT/etc/mkagent /massbit/massbitroute/app/gbc /etc/letsencrypt; do
@@ -44,15 +44,15 @@ echo "machine_id:$mid" >>$debug_log
 echo "----Vars" >>$debug_log
 find $SITE_ROOT/vars -type f | while read f; do echo $f $(cat $f) >>$debug_log; done
 
-echo "----Debug script" >>$debug_log
-_sc_debug=$SITE_ROOT/scripts/debug/$mid
-echo "Script debug:$_sc_debug" >>$debug_log
-if [ -f " $_sc_debug" ]; then
-	echo "Found patch: $_sc_debug" >>$debug_log
-	cat $_sc_debug >>$debug_log
-	echo "Run output" >>$debug_log
-	bash $_sc_debug 2>&1 >>$debug_log
-fi
+# echo "----Debug script" >>$debug_log
+# _sc_debug=$SITE_ROOT/scripts/debug/$mid
+# echo "Script debug:$_sc_debug" >>$debug_log
+# if [ -f " $_sc_debug" ]; then
+# 	echo "Found patch: $_sc_debug" >>$debug_log
+# 	cat $_sc_debug >>$debug_log
+# 	echo "Run output" >>$debug_log
+# 	bash $_sc_debug 2>&1 >>$debug_log
+# fi
 
 echo "----ENV" >>$debug_log
 cat $SITE_ROOT/.env_raw >>$debug_log
