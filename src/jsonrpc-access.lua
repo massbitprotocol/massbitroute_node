@@ -6,6 +6,8 @@ end
 -- get request content
 ngx.req.read_body()
 
+ngx.log(ngx.ERR, ngx.var.request_body)
+
 -- try to parse the body as JSON
 local success, body = pcall(cjson.decode, ngx.var.request_body)
 if not success then
