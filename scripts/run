@@ -39,7 +39,7 @@ $SITE_ROOT/logs/access/*.log
 $SITE_ROOT/logs/nginx/*.log
 $SITE_ROOT/logs/*.log {
        daily
-       rotate 7
+       rotate 1
        delaycompress
        compress
        notifempty
