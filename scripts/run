@@ -137,7 +137,7 @@ _add_host_file() {
 }
 
 _reload() {
-	rm /tmp/test_speed_*
+	rm /tmp/test_speed_* /tmp/check_speed
 	if [ -f "$SITE_ROOT/logs/1024M" ]; then
 		rm $SITE_ROOT/logs/1024M
 	fi
