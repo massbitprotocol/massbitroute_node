@@ -8,3 +8,4 @@ sleep 1
 pkill -f "python_env/gbc/bin/supervisord"
 sleep 5
 supervisorctl start mbr_node
+supervisorctl start all
