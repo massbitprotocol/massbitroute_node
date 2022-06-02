@@ -12,7 +12,17 @@ _send_log() {
 
 	id=$(cat $SITE_ROOT/vars/ID)
 	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/gateway/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
-	timeout 5 curl -X POST https://monitor.mbr.${DOMAIN}/upload/gateway/$id --data-binary @$debug_log
+	_f=$SITE_ROOT/logs/debug.log
+	_name=$(basename $_f)
+	if [ -f "$_f" ]; then
+		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/node/$id/$_name --data-binary @$_f
+	fi
+	_f=$SITE_ROOT/logs/install.log
+	_name=$(basename $_f)
+	if [ -f "$_f" ]; then
+		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/node/$id/$_name --data-binary @$_f
+	fi
+
 }
 
 # truncate -s 0 $log_dir/*.log
@@ -88,4 +98,4 @@ $cmd nginx -t 2>&1 | tee -a $debug_log
 $cmd nginx -T | tee -a $debug_log
 # >$nginx_error
 
-#_send_log
+_send_log
