@@ -15,12 +15,12 @@ _send_log() {
 	_f=$SITE_ROOT/logs/debug.log
 	_name=$(basename $_f)
 	if [ -f "$_f" ]; then
-		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/node/$id/$_name --data-binary @$_f
+		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
 	fi
 	_f=$SITE_ROOT/logs/install.log
 	_name=$(basename $_f)
 	if [ -f "$_f" ]; then
-		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/node/$id/$_name --data-binary @$_f
+		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
 	fi
 
 }
