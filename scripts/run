@@ -216,8 +216,13 @@ _monitor() {
 }
 
 _run() {
+	_t1=$(date +%s)
+	echo "$(date):Start monitor"
 	rm -rf $SITE_ROOT/tmp/*
 	$SITE_ROOT/start_server
+	_t2=$(date +%s)
+	_t=$(expr $_t2 - $_t1)
+	echo "$(date): End monitor. elapse $_t seconds"
 }
 
 $@
