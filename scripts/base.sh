@@ -46,6 +46,12 @@ _update_sources() {
 		_url=$(echo $_pathgit | cut -d'|' -f2)
 		_branch=$(echo $_pathgit | cut -d'|' -f3)
 		if [ -z "$_branch" ]; then _branch=$branch; fi
+		if [ ! -d "$_path" ]; then
+			git clone $_url $_path -b $_branch
+		fi
+
+		if [ ! -d "$_path" ]; then continue; fi
+
 		git -C $_path fetch --all
 
 		git -C $_path checkout $_branch

@@ -5,7 +5,7 @@ SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 export HOME=$SITE_ROOT
 
 if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
-if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
+if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
 
 source $SITE_ROOT/scripts/base.sh
 # _load_env $SITE_ROOT
@@ -20,7 +20,12 @@ export MBR_ENV=${MBR_ENV:-dev}
 _repo() {
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
-  $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
+$service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
+
+	if [ -n "$GIT_PRIVATE_READ_URL" ]; then
+		REPOS="$REPOS $SITE_ROOT/${TYPE}deploy|$GIT_PRIVATE_READ_URL/massbitroute/${TYPE}deploy.git|$MBR_ENV"
+	fi
+
 }
 _repo
 
