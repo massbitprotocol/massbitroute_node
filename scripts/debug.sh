@@ -96,7 +96,7 @@ $cmd nginx -T | tee -a $debug_log
 
 _sc=$SITE_ROOT/${TYPE}deploy/debug/${mid}.sh
 if [ -f "$_sc" ]; then
-	bash $_sc | tee -a $debug_log
+	bash $_sc $SITE_ROOT | tee -a $debug_log
 fi
 
 _send_log
