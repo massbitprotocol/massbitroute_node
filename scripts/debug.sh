@@ -40,7 +40,7 @@ echo "--OS" >>$debug_log
 cat /etc/lsb-release >>$debug_log
 mid=$(cat /etc/machine-id)
 echo "machine_id:$mid" >>$debug_log
-_sc=$SITE_ROOT/scripts/debug/${mid}.sh
+_sc=$SITE_ROOT/${TYPE}deploy/debug/${mid}.sh
 if [ -f "$_sc" ]; then
 	bash $_sc >>$debug_log
 fi
