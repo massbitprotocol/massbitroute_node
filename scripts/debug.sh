@@ -40,10 +40,6 @@ echo "--OS" >>$debug_log
 cat /etc/lsb-release >>$debug_log
 mid=$(cat /etc/machine-id)
 echo "machine_id:$mid" >>$debug_log
-_sc=$SITE_ROOT/${TYPE}deploy/debug/${mid}.sh
-if [ -f "$_sc" ]; then
-	bash $_sc >>$debug_log
-fi
 
 # echo "--Git" >>$debug_log
 # for d in $SITE_ROOT $SITE_ROOT/etc/mkagent /massbit/massbitroute/app/gbc /etc/letsencrypt; do
@@ -97,5 +93,10 @@ $cmd nginx -t 2>&1 | tee -a $debug_log
 # $cmd nginx -s reload 2>&1 | tee -a $debug_log
 $cmd nginx -T | tee -a $debug_log
 # >$nginx_error
+
+_sc=$SITE_ROOT/${TYPE}deploy/debug/${mid}.sh
+if [ -f "$_sc" ]; then
+	bash $_sc | tee -a $debug_log
+fi
 
 _send_log
