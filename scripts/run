@@ -85,6 +85,15 @@ _install_repos() {
 		_git_clone $_url $_path $_branch
 	done
 }
+_maintain() {
+	rm $SITE_ROOT/logs/*M
+	truncate -s 0 $SITE_ROOT/logs/*
+	truncate -s 0 $SITE_ROOT/logs/access/*
+	truncate -s 0 $SITE_ROOT/logs/nginx/*
+	bash $SITE_ROOT/mbr node nodeinfo
+	rm /tmp/test_speed_* /tmp/check_speed
+	_debug
+}
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
@@ -144,18 +153,18 @@ _add_host_file() {
 
 _reload() {
 
-	bash $SITE_ROOT/mbr node nodeinfo
-	rm /tmp/test_speed_* /tmp/check_speed
-	if [ -f "$SITE_ROOT/logs/1024M" ]; then
-		rm $SITE_ROOT/logs/1024M
-	fi
-	if [ ! -f "$SITE_ROOT/logs/128M" ]; then
-		dd if=/dev/zero of=$SITE_ROOT/logs/128M bs=128M count=1
-	fi
+	_maintain
 
-	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
-		bash $SITE_ROOT/mbr node nodeinfo
-	fi
+	# if [ -f "$SITE_ROOT/logs/1024M" ]; then
+	# 	rm $SITE_ROOT/logs/1024M
+	# fi
+	# if [ ! -f "$SITE_ROOT/logs/128M" ]; then
+	# 	dd if=/dev/zero of=$SITE_ROOT/logs/128M bs=128M count=1
+	# fi
+
+	# if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
+	# 	bash $SITE_ROOT/mbr node nodeinfo
+	# fi
 
 	_add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
@@ -178,7 +187,7 @@ _reload() {
 	$SITE_ROOT/cmd_server _update
 	$SITE_ROOT/cmd_server update
 	$SITE_ROOT/cmd_server start all
-	_debug
+
 }
 
 _update_repos() {
