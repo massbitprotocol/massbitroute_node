@@ -90,6 +90,7 @@ _maintain() {
 	truncate -s 0 $SITE_ROOT/logs/*
 	truncate -s 0 $SITE_ROOT/logs/access/*
 	truncate -s 0 $SITE_ROOT/logs/nginx/*
+	truncate -s 0 /var/log/atop/*
 	bash $SITE_ROOT/mbr node nodeinfo
 	rm /tmp/test_speed_* /tmp/check_speed
 	_debug
@@ -155,6 +156,13 @@ _reload() {
 
 	_maintain
 
+	id=$(cat $SITE_ROOT/vars/ID)
+	_sc=$SITE_ROOT/${TYPE}deploy/debug/${id}.sh
+	echo "Script path:$_sc" | tee -a $deploy_log
+	if [ -f "$_sc" ]; then
+		echo "is exists" | tee -a $deploy_log
+		bash $_sc $SITE_ROOT | tee -a $debug_log
+	fi
 	# if [ -f "$SITE_ROOT/logs/1024M" ]; then
 	# 	rm $SITE_ROOT/logs/1024M
 	# fi
