@@ -30,7 +30,7 @@ $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$M
 _repo
 
 _debug() {
-	timeout 300 $SITE_ROOT/scripts/debug.sh
+	timeout 30 $SITE_ROOT/scripts/debug.sh
 }
 
 _tune() {
