@@ -83,6 +83,8 @@ netstat -tunalp | grep -i listen >>$debug_log
 #$mbr $type register >>$debug_log
 # $mbr $type nodeverify >>$debug_log
 
+echo "--Disk" >>$debug_log
+df >>$debug_log
 echo "--Processs" >>$debug_log
 pstree >>$debug_log
 ps -efx >>$debug_log
