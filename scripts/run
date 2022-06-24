@@ -199,6 +199,12 @@ _reload() {
 	$SITE_ROOT/cmd_server update
 	$SITE_ROOT/cmd_server start all
 
+	chmod +x $SITE_ROOT/bin/openresty/nginx/sbin/nginx
+	nginx="$SITE_ROOT/bin/openresty/nginx/sbin/nginx -c $SITE_ROOT/tmp/nginx.conf"
+	msg="$($nginx -t 2>&1 | tr -s '\n' ' ')"
+	st=$?
+	echo $st nginx_check - "$msg" >/tmp/nginx_check
+
 }
 
 _update_repos() {
