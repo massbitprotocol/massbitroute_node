@@ -115,6 +115,7 @@ _install() {
 
 _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
+	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI)
 	mkdir -p $SITE_ROOT/http.d
 	# $SITE_ROOT/mbr node nodeinfo
 	is_reloading=0
@@ -131,6 +132,8 @@ _load_config() {
 		mv http.d/${id}.conf.new http.d/${id}.conf
 		is_reloading=1
 	fi
+
+	sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
 	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
 	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
 	sed -i "s/proxy_pass ;/proxy_pass 127.0.0.1;/g" http.d/node.conf0
