@@ -7,7 +7,7 @@ export HOME=$SITE_ROOT
 if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
 if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
 
-source $SITE_ROOT/scripts/base.sh
+source $SITE_ROOT/scripts/base.sh >/dev/null
 # _load_env $SITE_ROOT
 cd $SITE_ROOT
 
@@ -62,10 +62,10 @@ _init() {
 	if [ ! -f "$SITE_ROOT/.env" ]; then
 		echo "$MBR_ENV" >$SITE_ROOT/.env
 	fi
-	source $SITE_ROOT/.env
+	source $SITE_ROOT/.env >/dev/null
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
 	bash $SITE_ROOT/cmd_server _env
-	source $SITE_ROOT/.env_raw
+	source $SITE_ROOT/.env_raw >/dev/null
 	_repo
 }
 _prepare() {
