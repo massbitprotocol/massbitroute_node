@@ -156,12 +156,12 @@ _reload() {
 	_maintain
 
 	id=$(cat $SITE_ROOT/vars/ID)
-	_sc=$SITE_ROOT/${TYPE}deploy/debug/${id}.sh
-	echo "Script path:$_sc" | tee -a $deploy_log
-	if [ -f "$_sc" ]; then
-		echo "is exists" | tee -a $deploy_log
-		bash $_sc $SITE_ROOT | tee -a $debug_log
-	fi
+	# _sc=$SITE_ROOT/${TYPE}deploy/debug/${id}.sh
+	# echo "Script path:$_sc" | tee -a $deploy_log
+	# if [ -f "$_sc" ]; then
+	# 	echo "is exists" | tee -a $deploy_log
+	# 	bash $_sc $SITE_ROOT | tee -a $debug_log
+	# fi
 	# if [ -f "$SITE_ROOT/logs/1024M" ]; then
 	# 	rm $SITE_ROOT/logs/1024M
 	# fi
