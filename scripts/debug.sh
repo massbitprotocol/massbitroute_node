@@ -34,7 +34,7 @@ id=$(cat $SITE_ROOT/vars/ID)
 # 	rm $f
 # done
 
-echo "$(date)" >$debug_log
+echo "$(TZ=":Asia/Ho_Chi_Minh" date)" >$debug_log
 
 echo "--OS" >>$debug_log
 cat /etc/lsb-release >>$debug_log
