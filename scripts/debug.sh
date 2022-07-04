@@ -70,9 +70,9 @@ iptables -nL >>$debug_log
 echo "----DNS resolve" >>$debug_log
 cat /etc/resolv.conf >>$debug_log
 echo "----Services" >>$debug_log
-supervisorctl status >>$debug_log
 $cmd status >>$debug_log
 echo "----Supervisor" >>$debug_log
+supervisorctl status >>$debug_log
 ls /etc/supervisor/conf.d/ >>$debug_log
 if [ ! -f "/usr/bin/netstat" ]; then apt-get install -y net-tools; fi
 echo "--Network interface" >>$debug_log
