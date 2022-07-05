@@ -130,10 +130,18 @@ _load_config() {
 		is_reloading=1
 	fi
 
-	sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
-	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
-	sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/node.conf0
+	if [ -n "$DATA_URI" ]; then
+		sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
+		sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/node.conf0
+	fi
+	if [ -n "$id" ]; then
+		sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+	fi
+
+	if [ -n "$DOMAIN" ]; then
+		sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+	fi
+
 	$SITE_ROOT/cmd_server start all
 	return $is_reloading
 }
