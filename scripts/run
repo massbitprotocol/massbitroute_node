@@ -134,15 +134,25 @@ _load_config() {
 	fi
 
 	if [ -n "$DATA_URI" ]; then
-		sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
-		sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/node.conf0
+		if [ -f "http.d/${id}.conf" ]; then
+			sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
+		fi
+
+		if [ -f "http.d/node.conf0" ]; then
+			sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/node.conf0
+		fi
 	fi
 	if [ -n "$id" ]; then
-		sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+		if [ -f "etc/node.conf" ]; then
+			sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+		fi
+
 	fi
 
 	if [ -n "$DOMAIN" ]; then
-		sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+		if [ -f "http.d/node.conf0" ]; then
+			sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+		fi
 	fi
 
 	$SITE_ROOT/cmd_server start all
