@@ -96,7 +96,7 @@ _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
 	apt-get update
-	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev
+	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev apt-utils
 	if [ -f "/usr/bin/systemctl" ]; then
 		systemctl enable supervisor
 		systemctl start supervisor
