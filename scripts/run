@@ -115,7 +115,7 @@ _install() {
 
 _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
-	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI)
+	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI | sed 's/\//\\\//g')
 	mkdir -p $SITE_ROOT/http.d
 	# $SITE_ROOT/mbr node nodeinfo
 	is_reloading=0
