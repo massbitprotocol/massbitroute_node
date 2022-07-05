@@ -1,6 +1,7 @@
 #!/bin/bash
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
+export DEBIAN_FRONTEND=noninteractive
 
 export HOME=$SITE_ROOT
 
@@ -95,7 +96,7 @@ _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
 	apt-get update
-	apt-get install -y git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev
+	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev
 	systemctl enable supervisor
 	systemctl start supervisor
 	mkdir -p /etc/supervisor/conf.d
