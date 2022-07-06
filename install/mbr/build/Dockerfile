@@ -2,6 +2,7 @@ FROM ubuntu:20.04
 MAINTAINER "Vu Tran<baysao@massbit.io>"
 ARG BRANCH=testing
 ENV MBR_MODE=docker
+ENV MBR_ROLE=node
 ENV MBR_ENV=$BRANCH
 RUN DEBIAN_FRONTEND=noninteractive apt-get update \
     && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends ca-certificates curl apt-utils git \

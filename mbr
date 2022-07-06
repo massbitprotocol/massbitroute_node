@@ -91,6 +91,33 @@ gw_ping() {
 
 }
 
+gw_geo() {
+	PORTAL_URL=$(cat $VAR/PORTAL_URL)
+	ID=$(cat $VAR/ID)
+	TOKEN=$(cat $VAR/TOKEN)
+	APP_KEY=$(cat $VAR/APP_KEY)
+	IP="$(curl -ssSfL http://ipv4.icanhazip.com)"
+	n=$(grep -o "\." <<<"$IP" | wc -l)
+	if [ $n -ne 3 ]; then
+		echo "Your IP is unknown"
+		exit 1
+	fi
+
+	if [ -z "$IP" ]; then
+		echo "Your IP is unknown"
+		exit 1
+	fi
+
+	zone=$(curl -ssSfL "${PORTAL_URL}/mbr/node/${ID}/geo?ip=$IP" --header 'Authorization: ${APP_KEY}' | jq .continent_code)
+	zone=$(echo $zone | sed 's/\"//g')
+	if [ -z "$zone" ]; then
+		echo "Cannot detect zone from IP $IP"
+	fi
+
+	if [ "$zone" != "{{zone}}" ]; then
+		echo "WARNING: Your IP $IP not in zone {{zone}}"
+	fi
+}
 gw_nodeinfo() {
 	#	gw_apply
 	#	gw_nodekey

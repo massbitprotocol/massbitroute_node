@@ -309,7 +309,8 @@ EOF
 	if [ -n "$SITE_ROOT" ]; then $MBR node set SITE_ROOT "$SITE_ROOT"; fi
 	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
 	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
-		$MBR node nodeinfo
+		$MBR node geo
+		_register_node
 	fi
 }
 
