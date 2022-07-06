@@ -318,7 +318,7 @@ EOF
 
 _update() {
 	if [ "$MBR_MODE" == "docker" ]; then
-		_update_docker
+		_update_docker 2>&1 >>log_install
 	fi
 	echo node >vars/TYPE
 
