@@ -1,3 +1,4 @@
+#!/bin/bash
 mkdir vars logs
 # -e "ENV=keiko" \
 # -e "ID=a1f1c1a9-e7ad-4d29-ac71-0cb3b0c57225" \
