@@ -241,23 +241,6 @@ _update_repos() {
 	return $_st_repo
 }
 
-_update() {
-	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
-	echo "Update"
-	_st_update=0
-
-	_update_repos
-	_st_update=$?
-
-	_load_config
-	_st=$?
-	if [ $_st_update -eq 0 ]; then
-		_st_update=$_st
-	fi
-
-	return $_st_update
-}
-
 _nodeverify() {
 	res=$($MBR node nodeverify | tail -1 | jq ".status,.message" | sed -z "s/\"//g;")
 	echo $res
@@ -319,12 +302,30 @@ _update_docker() {
 		$MBR node nodeinfo
 	fi
 }
-_monitor() {
 
+_update() {
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker
 	fi
 	echo node >vars/TYPE
+
+	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
+	echo "Update"
+	_st_update=0
+
+	_update_repos
+	_st_update=$?
+
+	_load_config
+	_st=$?
+	if [ $_st_update -eq 0 ]; then
+		_st_update=$_st
+	fi
+
+	return $_st_update
+}
+
+_monitor() {
 
 	_update
 	_st_monitor=$?
