@@ -17,6 +17,7 @@ service_dir=$mbr_root/src/sites/services
 
 log_install=$SITE_ROOT/logs/install.log
 GIT_PUBLIC_URL="https://github.com"
+MBR=$SITE_ROOT/mbr
 export MBR_ENV=${MBR_ENV:-dev}
 _repo() {
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
@@ -57,7 +58,10 @@ EOF
 
 _init() {
 	if [ ! -f "$SITE_ROOT/.env" ]; then
-		echo "$MBR_ENV" >$SITE_ROOT/.env
+		cat >$SITE_ROOT/.env <<EOF
+export GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=${MBR_ENV}
+EOF
 	fi
 	source $SITE_ROOT/.env >/dev/null
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
@@ -96,7 +100,7 @@ _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
 	apt-get update
-	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev apt-utils
+	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb0 libmaxminddb-dev apt-utils
 	if [ -f "/usr/bin/systemctl" ]; then
 		systemctl enable supervisor
 		systemctl start supervisor
@@ -251,7 +255,69 @@ _update() {
 	return $_st_update
 }
 
+_nodeverify() {
+	res=$($MBR node nodeverify | tail -1 | jq ".status,.message" | sed -z "s/\"//g;")
+	echo $res
+}
+_register_node() {
+	SCRIPTS_RUN="$SITE_ROOT/scripts/run"
+	rm -f $SITE_ROOT/http.d/*
+
+	$MBR node register
+
+	supervisorctl status
+
+	$SCRIPTS_RUN _load_config
+	$SITE_ROOT/cmd_server _update
+
+	$SITE_ROOT/cmd_server status
+
+	res=$($MBR node nodeverify)
+	status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
+	while [ "$status" != "verified" ]; do
+		message=$(echo $res | jq ".message")
+		if [ "$message" != "null" ]; then
+			echo "Verifying with message: $message"
+		fi
+		sleep 10
+		$SCRIPTS_RUN _load_config
+		$SITE_ROOT/cmd_server _update
+		res=$($MBR node nodeverify)
+		status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
+	done
+
+	if [ "$status" = "verified" ]; then
+		echo "Node installed successfully !"
+	fi
+}
+_update_docker() {
+	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
+	if [ -n "$ENV" ]; then
+		$MBR node set ENV "$ENV"
+		$MBR node set MBR_ENV "$ENV"
+	fi
+	if [ -n "$MBR_ENV" ]; then
+		$MBR node set MBR_ENV "$MBR_ENV"
+		$MBR node set ENV "$MBR_ENV"
+	fi
+	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
+	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
+	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
+	if [ -n "$TOKEN" ]; then $MBR node set TOKEN "$TOKEN"; fi
+	if [ -n "$BLOCKCHAIN" ]; then $MBR node set BLOCKCHAIN "$BLOCKCHAIN"; fi
+	if [ -n "$NETWORK" ]; then $MBR node set NETWORK "$NETWORK"; fi
+	if [ -n "$APP_KEY" ]; then $MBR node set APP_KEY "$APP_KEY"; fi
+	if [ -n "$SITE_ROOT" ]; then $MBR node set SITE_ROOT "$SITE_ROOT"; fi
+	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
+	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
+		$MBR node nodeinfo
+	fi
+}
 _monitor() {
+
+	if [ "$MBR_MODE" == "docker" ]; then
+		_update_docker
+	fi
 	echo node >vars/TYPE
 
 	_update
