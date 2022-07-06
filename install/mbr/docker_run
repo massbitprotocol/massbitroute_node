@@ -1,19 +1,31 @@
 #!/bin/bash
-TYPE=node
 mkdir vars logs
-
-docker run -d -t -i --rm \
-	-p "443:443" \
-	--name "mbr_node" \
-	-e "INSTALL_CMD=" \
-	-e "ENV=" \
-	-e "ID=" \
-	-e "USER_ID=" \
-	-e "BLOCKCHAIN=" \
-	-e "NETWORK=" \
-	-e "ZONE=" \
-	-e "APP_KEY=" \
-	-e "PORTAL_URL=" \
-	-v "$PWD/logs:/massbit/massbitroute/app/src/sites/services/$TYPE/logs:rw" \
-	-v "$PWD/vars:/massbit/massbitroute/app/src/sites/services/$TYPE/vars:rw" \
-	massbit/massbitroute_${TYPE}:latest
+_run_env() {
+	TYPE=$1
+	docker run -d -t -i --rm \
+		-p "443:443" \
+		--name "mbr_${TYPE}" \
+		-e "ENV=" \
+		-e "ID=" \
+		-e "USER_ID=" \
+		-e "BLOCKCHAIN=" \
+		-e "NETWORK=" \
+		-e "ZONE=" \
+		-e "APP_KEY=" \
+		-e "PORTAL_URL=" \
+		-v "$PWD/logs:/massbit/massbitroute/app/src/sites/services/$TYPE/logs:rw" \
+		-v "$PWD/vars:/massbit/massbitroute/app/src/sites/services/$TYPE/vars:rw" \
+		massbit/massbitroute_${TYPE}:latest
+}
+_run_cmd() {
+	TYPE=$1
+	CMD=$2
+	docker run -d -t -i --rm \
+		-p "443:443" \
+		--name "mbr_${TYPE}" \
+		-e "INSTALL_CMD=$CMD" \
+		-v "$PWD/logs:/massbit/massbitroute/app/src/sites/services/$TYPE/logs:rw" \
+		-v "$PWD/vars:/massbit/massbitroute/app/src/sites/services/$TYPE/vars:rw" \
+		massbit/massbitroute_${TYPE}:latest
+}
+$@
