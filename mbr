@@ -108,7 +108,7 @@ gw_geo() {
 		exit 1
 	fi
 
-	zone=$(curl -ssSfL "${PORTAL_URL}/mbr/node/${ID}/geo?ip=$IP" --header 'Authorization: ${APP_KEY}' | jq .continent_code)
+	zone=$(curl -ssSfL "${PORTAL_URL}/mbr/node/${ID}/geo?ip=$IP" --header "Authorization: ${APP_KEY}" | jq .continent_code)
 	zone=$(echo $zone | sed 's/\"//g')
 	if [ -z "$zone" ]; then
 		echo "Cannot detect zone from IP $IP"
