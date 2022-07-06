@@ -93,6 +93,7 @@ gw_ping() {
 
 gw_geo() {
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
+	ZONE=$(cat $VAR/ZONE)
 	ID=$(cat $VAR/ID)
 	TOKEN=$(cat $VAR/TOKEN)
 	APP_KEY=$(cat $VAR/APP_KEY)
@@ -117,8 +118,8 @@ gw_geo() {
 		echo "Cannot detect zone from IP $IP"
 	fi
 
-	if [ "$zone" != "{{zone}}" ]; then
-		echo "WARNING: Your IP $IP not in zone {{zone}}"
+	if [ "$zone" != "${ZONE}" ]; then
+		echo "WARNING: Your IP $IP not in zone ${ZONE}"
 	fi
 }
 gw_nodeinfo() {
