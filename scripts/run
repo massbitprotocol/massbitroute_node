@@ -305,7 +305,7 @@ EOF
 	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
 	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
 	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
-	if [ -n "$TOKEN" ]; then $MBR node set TOKEN "$TOKEN"; fi
+	# if [ -n "$TOKEN" ]; then $MBR node set TOKEN "$TOKEN"; fi
 	if [ -n "$BLOCKCHAIN" ]; then $MBR node set BLOCKCHAIN "$BLOCKCHAIN"; fi
 	if [ -n "$NETWORK" ]; then $MBR node set NETWORK "$NETWORK"; fi
 	if [ -n "$APP_KEY" ]; then $MBR node set APP_KEY "$APP_KEY"; fi

@@ -75,27 +75,27 @@ gw_show() {
 		echo "$key: $val"
 	done
 }
-gw_ping() {
-	#	gw_apply
-	#	gw_nodekey
-	USER_ID=$(cat $VAR/USER_ID)
-	ID=$(cat $VAR/ID)
-	TOKEN=$(cat $VAR/TOKEN)
-	NETWORK=$(cat $VAR/NETWORK)
-	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	curl -sk \
-		-X POST \
-		-H "Content-Type: application/json" \
-		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
-		"$MBRAPI/api/v1/?action=${TYPE}.ping"
+# gw_ping() {
+# 	#	gw_apply
+# 	#	gw_nodekey
+# 	USER_ID=$(cat $VAR/USER_ID)
+# 	ID=$(cat $VAR/ID)
+# 	# TOKEN=$(cat $VAR/TOKEN)
+# 	NETWORK=$(cat $VAR/NETWORK)
+# 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+# 	curl -sk \
+# 		-X POST \
+# 		-H "Content-Type: application/json" \
+# 		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
+# 		"$MBRAPI/api/v1/?action=${TYPE}.ping"
 
-}
+# }
 
 gw_geo() {
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	ZONE=$(cat $VAR/ZONE)
 	ID=$(cat $VAR/ID)
-	TOKEN=$(cat $VAR/TOKEN)
+	# TOKEN=$(cat $VAR/TOKEN)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	IP="$(curl -skL http://ipv4.icanhazip.com)"
 	n=$(grep -o "\." <<<"$IP" | wc -l)
@@ -126,7 +126,7 @@ gw_nodeinfo() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
-	TOKEN=$(cat $VAR/TOKEN)
+	# TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	IP=$(cat $VAR/IP)
@@ -155,7 +155,7 @@ gw_nodeverify() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
-	TOKEN=$(cat $VAR/TOKEN)
+	# TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	IP=$(cat $VAR/IP)
@@ -190,7 +190,7 @@ gw_register() {
 	fi
 
 	USER_ID=$(cat $VAR/USER_ID)
-	TOKEN=$(cat $VAR/TOKEN)
+	# TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	ID=$(cat $VAR/ID)
@@ -206,7 +206,7 @@ gw_unregister() {
 	#	gw_apply
 	#	gw_nodekey
 	USER_ID=$(cat $VAR/USER_ID)
-	TOKEN=$(cat $VAR/TOKEN)
+	# TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
 	ID=$(cat $VAR/ID)
