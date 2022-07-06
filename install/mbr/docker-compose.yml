@@ -4,7 +4,7 @@ services:
     privileged: true
     restart: unless-stopped
     # image: ubuntu:20.04
-    image: massbitroute_node
+    image: massbit/massbitroute_node
 
     # command: 'sleep infinity'
     command: ""
