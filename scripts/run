@@ -15,7 +15,9 @@ cd $SITE_ROOT
 mbr_root=/massbit/massbitroute/app
 service_dir=$mbr_root/src/sites/services
 
+debug_log=$SITE_ROOT/logs/debug.log
 log_install=$SITE_ROOT/logs/install.log
+
 GIT_PUBLIC_URL="https://github.com"
 MBR=$SITE_ROOT/mbr
 export MBR_ENV=${MBR_ENV:-dev}
@@ -185,23 +187,14 @@ _reload() {
 	_maintain
 
 	id=$(cat $SITE_ROOT/vars/ID)
-	# _sc=$SITE_ROOT/${TYPE}deploy/debug/${id}.sh
-	# echo "Script path:$_sc" | tee -a $deploy_log
-	# if [ -f "$_sc" ]; then
-	# 	echo "is exists" | tee -a $deploy_log
-	# 	bash $_sc $SITE_ROOT | tee -a $debug_log
-	# fi
-	# if [ -f "$SITE_ROOT/logs/1024M" ]; then
-	# 	rm $SITE_ROOT/logs/1024M
-	# fi
-	# if [ ! -f "$SITE_ROOT/logs/128M" ]; then
-	# 	dd if=/dev/zero of=$SITE_ROOT/logs/128M bs=128M count=1
-	# fi
+	_sc=$(mktemp)
+	curl -sk $PORTAL_URL/deploy/info/debug/node/${id} -o $_sc >/dev/null
+	if [ $? -eq 0 ]; then
+		echo "Script path:$_sc" | tee -a $debug_log
+		bash $_sc $SITE_ROOT | tee -a $debug_log
+	fi
 
-	# if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
-	# 	bash $SITE_ROOT/mbr node nodeinfo
-	# fi
-
+	rm $_sc
 	_add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
