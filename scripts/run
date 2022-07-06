@@ -299,6 +299,7 @@ _update_docker() {
 export GIT_PUBLIC_URL="https://github.com"
 export MBR_ENV=${MBR_ENV}
 EOF
+	if [ -n "$ZONE" ]; then $MBR node set ZONE "$ZONE"; fi
 	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
 	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
 	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
