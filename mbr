@@ -63,7 +63,7 @@ gw_apply() {
 }
 gw_getkey() {
 	machine_id=$(cat /var/lib/dbus/machine-id)
-	mbrnodekey=$(curl -s -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
+	mbrnodekey=$(curl -sk -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
 	echo $machine_id >$VAR/NODE_ID
 	echo $mbrnodekey >$VAR/NODE_KEY
 	echo "NODE_ID: $machine_id"
@@ -83,7 +83,7 @@ gw_ping() {
 	TOKEN=$(cat $VAR/TOKEN)
 	NETWORK=$(cat $VAR/NETWORK)
 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	curl -s \
+	curl -sk \
 		-X POST \
 		-H "Content-Type: application/json" \
 		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
@@ -96,7 +96,7 @@ gw_geo() {
 	ID=$(cat $VAR/ID)
 	TOKEN=$(cat $VAR/TOKEN)
 	APP_KEY=$(cat $VAR/APP_KEY)
-	IP="$(curl -ssSfL http://ipv4.icanhazip.com)"
+	IP="$(curl -skL http://ipv4.icanhazip.com)"
 	n=$(grep -o "\." <<<"$IP" | wc -l)
 	if [ $n -ne 3 ]; then
 		echo "Your IP is unknown"
@@ -108,7 +108,7 @@ gw_geo() {
 		exit 1
 	fi
 
-	zone=$(curl -ssSfL \
+	zone=$(curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"${PORTAL_URL}/mbr/node/${ID}/geo?ip=$IP" | jq .continent_code)
@@ -143,7 +143,7 @@ gw_nodeinfo() {
 
 	#echo "Your IP:$IP"
 
-	curl -s \
+	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"$PORTAL_URL/mbr/node/$ID/info" >$VAR/RAW
@@ -162,7 +162,7 @@ gw_nodeverify() {
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
 	if [ -n "$IP" ]; then
-		IP=$(curl -s ipv4.icanhazip.com)
+		IP=$(curl -sk ipv4.icanhazip.com)
 		n=$(grep -o "\." <<<"$IP" | wc -l)
 		if [ $n -eq 3 ]; then
 			echo $IP >$VAR/IP
@@ -172,7 +172,7 @@ gw_nodeverify() {
 
 	#echo "Your IP:$IP"
 
-	curl -s \
+	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"$PORTAL_URL/mbr/node/$ID/verify"
@@ -195,7 +195,7 @@ gw_register() {
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
-	curl -s \
+	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"$PORTAL_URL/mbr/node/$ID/register"
@@ -211,7 +211,7 @@ gw_unregister() {
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
-	curl -s \
+	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"$PORTAL_URL/mbr/node/$ID/unregister"
