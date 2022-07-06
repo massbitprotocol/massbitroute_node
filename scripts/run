@@ -308,9 +308,10 @@ EOF
 	if [ -n "$APP_KEY" ]; then $MBR node set APP_KEY "$APP_KEY"; fi
 	if [ -n "$SITE_ROOT" ]; then $MBR node set SITE_ROOT "$SITE_ROOT"; fi
 	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
-	if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
+	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
 		$MBR node geo
 		_register_node
+		touch $SITE_ROOT/logs/install.done
 	fi
 }
 
