@@ -278,7 +278,12 @@ _register_node() {
 }
 _update_docker() {
 	if [ -n "$INSTALL_CMD" ]; then
-		echo "$INSTALL_CMD" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print toupper($1)"="$2}' | while read e; do export $e; done
+		tmp=$(mktemp)
+		echo "$INSTALL_CMD" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print "export",toupper($1)"="$2}' >$tmp
+		echo >>$tmp
+		source $tmp
+		rm $tmp
+
 	fi
 	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
 	if [ -n "$ENV" ]; then
