@@ -294,6 +294,11 @@ _update_docker() {
 		$MBR node set MBR_ENV "$MBR_ENV"
 		$MBR node set ENV "$MBR_ENV"
 	fi
+
+	cat >$SITE_ROOT/.env <<EOF
+export GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=${MBR_ENV}
+EOF
 	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
 	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
 	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
