@@ -247,6 +247,7 @@ _nodeverify() {
 }
 _register_node() {
 	SCRIPTS_RUN="$SITE_ROOT/scripts/run"
+	MBR=$SITE_ROOT/mbr
 	rm -f $SITE_ROOT/http.d/*
 
 	$MBR node register
