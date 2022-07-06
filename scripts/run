@@ -32,12 +32,15 @@ _debug() {
 }
 
 _tune() {
-	echo 2000000 >/proc/sys/fs/nr_open
-	echo 2000000 >/proc/sys/fs/file-max
-	ulimit -n 2000000
-	cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
-	cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
-	sysctl -p
+	if [ -f "/proc/sys/fs/nr_open" ]; then
+		echo 2000000 >/proc/sys/fs/nr_open
+		echo 2000000 >/proc/sys/fs/file-max
+		ulimit -n 2000000
+		cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
+		cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
+		sysctl -p
+	fi
+
 	cat >/etc/logrotate.d/massbit <<EOF
 $SITE_ROOT/logs/access/*.log
 $SITE_ROOT/logs/nginx/*.log
