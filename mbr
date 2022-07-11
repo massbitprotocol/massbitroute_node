@@ -159,22 +159,22 @@ gw_nodeinfo() {
 gw_nodeverify() {
 	#	gw_apply
 	#	gw_nodekey
-	USER_ID=$(cat $VAR/USER_ID)
+	# USER_ID=$(cat $VAR/USER_ID)
 	# TOKEN=$(cat $VAR/TOKEN)
-	NETWORK=$(cat $VAR/NETWORK)
-	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	IP=$(cat $VAR/IP)
+	# NETWORK=$(cat $VAR/NETWORK)
+	# BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	# IP=$(cat $VAR/IP)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
-	if [ -n "$IP" ]; then
-		IP=$(curl -sk ipv4.icanhazip.com)
-		n=$(grep -o "\." <<<"$IP" | wc -l)
-		if [ $n -eq 3 ]; then
-			echo $IP >$VAR/IP
-		fi
+	# if [ -n "$IP" ]; then
+	# 	IP=$(curl -sk ipv4.icanhazip.com)
+	# 	n=$(grep -o "\." <<<"$IP" | wc -l)
+	# 	if [ $n -eq 3 ]; then
+	# 		echo $IP >$VAR/IP
+	# 	fi
 
-	fi
+	# fi
 
 	#echo "Your IP:$IP"
 

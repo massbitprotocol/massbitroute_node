@@ -249,7 +249,7 @@ _register_node() {
 	rm -f $SITE_ROOT/http.d/*
 
 	$MBR node register
-	$MBR node nodeinfo
+	# $MBR node nodeinfo
 
 	supervisorctl status
 
@@ -314,6 +314,7 @@ EOF
 	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
 	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
 		$MBR node geo
+		$MBR node nodeinfo
 		_register_node
 		touch $SITE_ROOT/logs/install.done
 	fi
