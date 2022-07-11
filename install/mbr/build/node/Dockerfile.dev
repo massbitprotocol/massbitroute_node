@@ -15,4 +15,5 @@ RUN \
     ; mkdir -p /var/log/supervisor \
     ; rm -rf /var/lib/apt/lists/* \
     ; echo user=root >>  /etc/supervisor/supervisord.conf
-CMD ["/usr/bin/supervisord", "-n"]
+CMD ["-n"]
+ENTRYPOINT  ["/usr/bin/supervisord"]
