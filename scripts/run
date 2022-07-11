@@ -22,6 +22,8 @@ GIT_PUBLIC_URL="https://github.com"
 MBR=$SITE_ROOT/mbr
 export MBR_ENV=${MBR_ENV:-dev}
 _repo() {
+	if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
+	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
 $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
@@ -62,16 +64,17 @@ EOF
 }
 
 _init() {
-	if [ ! -f "$SITE_ROOT/.env" ]; then
-		cat >$SITE_ROOT/.env <<EOF
+	# if [ ! -f "$SITE_ROOT/.env" ]; then
+	cat >$SITE_ROOT/.env <<EOF
 export GIT_PUBLIC_URL="https://github.com"
 export MBR_ENV=${MBR_ENV}
 EOF
-	fi
-	source $SITE_ROOT/.env >/dev/null
+	# fi
+	# source $SITE_ROOT/.env >/dev/null
+	_repo
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
-	bash $SITE_ROOT/cmd_server _env
-	source $SITE_ROOT/.env_raw >/dev/null
+	# bash $SITE_ROOT/cmd_server _env
+	# source $SITE_ROOT/.env_raw >/dev/null
 	_repo
 }
 _prepare() {
@@ -104,8 +107,8 @@ _maintain() {
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
-	apt-get update
-	apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb0 libmaxminddb-dev apt-utils
+	# apt-get update
+	# apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb0 libmaxminddb-dev apt-utils
 	if [ -f "/usr/bin/systemctl" ]; then
 		systemctl enable supervisor
 		systemctl start supervisor
@@ -113,7 +116,9 @@ _supervisor() {
 
 	mkdir -p /etc/supervisor/conf.d
 	cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
-	supervisorctl update
+	if [ "$MBR_MODE" != "docker" ]; then
+		supervisorctl update
+	fi
 }
 _install() {
 	_init >>$log_install
