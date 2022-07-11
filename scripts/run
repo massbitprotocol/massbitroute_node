@@ -249,6 +249,7 @@ _register_node() {
 	rm -f $SITE_ROOT/http.d/*
 
 	$MBR node register
+	$MBR node nodeinfo
 
 	supervisorctl status
 

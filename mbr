@@ -133,14 +133,14 @@ gw_nodeinfo() {
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
-	if [ -n "$IP" ]; then
-		IP=$(curl -s ipv4.icanhazip.com)
-		n=$(grep -o "\." <<<"$IP" | wc -l)
-		if [ $n -eq 3 ]; then
-			echo $IP >$VAR/IP
-		fi
+	# if [ -n "$IP" ]; then
+	# 	IP=$(curl -s ipv4.icanhazip.com)
+	# 	n=$(grep -o "\." <<<"$IP" | wc -l)
+	# 	if [ $n -eq 3 ]; then
+	# 		echo $IP >$VAR/IP
+	# 	fi
 
-	fi
+	# fi
 
 	#echo "Your IP:$IP"
 
@@ -148,7 +148,12 @@ gw_nodeinfo() {
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
 		"$PORTAL_URL/mbr/node/$ID/info" >$VAR/RAW
-	cat $VAR/RAW
+	IP=$(cat $VAR/RAW | jq .geo.ip)
+	echo $IP >$VAR/IP
+	DATA_URI=$(cat $VAR/RAW | jq .dataSource)
+	echo $DATA_URI >$VAR/DATA_URI
+	DATA_URI_WS=$(cat $VAR/RAW | jq .dataSourceWs)
+	echo $DATA_URI_WS >$VAR/DATA_URI_WS
 }
 
 gw_nodeverify() {
