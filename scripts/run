@@ -200,7 +200,7 @@ _reload() {
 	fi
 
 	rm $_sc
-	_add_host_file
+	# _add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
 		ln -sf $SITE_ROOT/ssl /etc/letsencrypt
