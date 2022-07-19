@@ -22,6 +22,7 @@ GIT_PUBLIC_URL="https://github.com"
 MBR=$SITE_ROOT/mbr
 export MBR_ENV=${MBR_ENV:-keiko}
 _repo() {
+	rm $SITE_ROOT/.env $SITE_ROOT/.env_raw
 	if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
 	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
