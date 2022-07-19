@@ -65,10 +65,12 @@ EOF
 
 _init() {
 	# if [ ! -f "$SITE_ROOT/.env" ]; then
-	cat >$SITE_ROOT/.env <<EOF
+	if [ -n "$MBR_ENV" ]; then
+		cat >$SITE_ROOT/.env <<EOF
 export GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=${MBR_ENV}
+export MBR_ENV=$MBR_ENV
 EOF
+	fi
 	# fi
 	# source $SITE_ROOT/.env >/dev/null
 	_repo
@@ -321,6 +323,12 @@ EOF
 }
 
 _update() {
+	if [ -n "$MBR_ENV" ]; then
+		cat >$SITE_ROOT/.env <<EOF
+export GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=$MBR_ENV
+EOF
+	fi
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
 	fi
