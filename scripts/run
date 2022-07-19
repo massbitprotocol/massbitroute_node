@@ -15,7 +15,7 @@ mbr_root=/massbit/massbitroute/app
 service_dir=$mbr_root/src/sites/services
 
 GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=${MBR_ENV:-dev}
+export MBR_ENV=${MBR_ENV:-keiko}
 _repo() {
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
