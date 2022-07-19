@@ -61,7 +61,12 @@ _update_sources() {
 		else
 
 			git -C $_path fetch --all
-			git -C $_path checkout $_branch
+			git -C $_path checkout $_branch 2>&1 || grep "error: Your local changes to the following files would be overwritten by checkout:" >/dev/null
+			if [ $? -eq 0 ]; then
+				rm -rf $_path
+				git clone $_url $_path -b $_branch
+			fi
+
 			tmp="$(git -C $_path pull 2>&1)"
 
 			echo "$tmp" | grep -i "updating"
