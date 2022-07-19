@@ -104,7 +104,7 @@ _maintain() {
 	truncate -s 0 /var/log/atop/*
 	bash $SITE_ROOT/mbr node nodeinfo
 	rm /tmp/test_speed_* /tmp/check_speed
-	_debug
+	# _debug
 }
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
