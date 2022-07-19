@@ -20,7 +20,7 @@ log_install=$SITE_ROOT/logs/install.log
 
 GIT_PUBLIC_URL="https://github.com"
 MBR=$SITE_ROOT/mbr
-export MBR_ENV=${MBR_ENV:-dev}
+export MBR_ENV=${MBR_ENV:-keiko}
 _repo() {
 	if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
 	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
