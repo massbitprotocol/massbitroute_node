@@ -194,14 +194,14 @@ _reload() {
 	_maintain
 
 	id=$(cat $SITE_ROOT/vars/ID)
-	_sc=$(mktemp)
-	curl -sk $PORTAL_URL/deploy/info/debug/$TYPE/${id} -o $_sc >/dev/null
-	if [ $? -eq 0 ]; then
-		echo "Script path:$_sc" | tee -a $debug_log
-		bash $_sc $SITE_ROOT | tee -a $debug_log
-	fi
+	# _sc=$(mktemp)
+	# curl -sk $PORTAL_URL/deploy/info/debug/$TYPE/${id} -o $_sc >/dev/null
+	# if [ $? -eq 0 ]; then
+	# 	echo "Script path:$_sc" | tee -a $debug_log
+	# 	bash $_sc $SITE_ROOT | tee -a $debug_log
+	# fi
 
-	rm $_sc
+	# rm $_sc
 	# _add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
