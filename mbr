@@ -106,15 +106,17 @@ gw_geo() {
 	# TOKEN=$(cat $VAR/TOKEN)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	IP="$(curl -skL http://ipv4.icanhazip.com)"
-	n=$(grep -o "\." <<<"$IP" | wc -l)
-	if [ $n -ne 3 ]; then
-		echo "Your IP is unknown"
-		exit 1
-	fi
 
 	if [ -z "$IP" ]; then
 		echo "Your IP is unknown"
 		exit 1
+	else
+		n=$(grep -o "\." <<<"$IP" | wc -l)
+		if [ $n -ne 3 ]; then
+			echo "Your IP is unknown"
+			exit 1
+		fi
+
 	fi
 
 	zone=$(curl -sk \
