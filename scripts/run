@@ -1,15 +1,11 @@
 #!/bin/bash
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
+MBR=$SITE_ROOT/mbr
 export DEBIAN_FRONTEND=noninteractive
-
 export HOME=$SITE_ROOT
 
-if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
-if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
-
 source $SITE_ROOT/scripts/base.sh >/dev/null
-# _load_env $SITE_ROOT
 cd $SITE_ROOT
 
 mbr_root=/massbit/massbitroute/app
@@ -18,13 +14,19 @@ service_dir=$mbr_root/src/sites/services
 debug_log=$SITE_ROOT/logs/debug.log
 log_install=$SITE_ROOT/logs/install.log
 
-GIT_PUBLIC_URL="https://github.com"
-MBR=$SITE_ROOT/mbr
-export MBR_ENV=${MBR_ENV:-keiko}
+export GIT_PUBLIC_URL=${GIT_PUBLIC_URL:-"https://github.com"}
+
 _repo() {
-	rm $SITE_ROOT/.env $SITE_ROOT/.env_raw
-	if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
-	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw; fi
+	git -C $SITE_ROOT branch
+	cat $SITE_ROOT/.env_raw
+	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
+
+	if [ -z "$MBR_ENV" ]; then
+		echo "MBR_ENV not defined"
+		exit 1
+	else
+		if [ -f "$SITE_ROOT/.env.$MBR_ENV" ]; then source $SITE_ROOT/.env.$MBR_ENV >/dev/null; fi
+	fi
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
 $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
@@ -65,25 +67,11 @@ EOF
 }
 
 _init() {
-	# if [ ! -f "$SITE_ROOT/.env" ]; then
-	if [ -n "$MBR_ENV" ]; then
-		cat >$SITE_ROOT/.env <<EOF
-export GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=$MBR_ENV
-EOF
-	fi
-	# fi
-	# source $SITE_ROOT/.env >/dev/null
-	_repo
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
-	# bash $SITE_ROOT/cmd_server _env
-	# source $SITE_ROOT/.env_raw >/dev/null
-	_repo
 }
 _prepare() {
 	echo "Prepare"
 	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/error $SITE_ROOT/logs/access $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
-	# rm -rf $SITE_ROOT/tmp/*
 
 }
 
@@ -98,20 +86,19 @@ _install_repos() {
 	done
 }
 _maintain() {
-	rm $SITE_ROOT/logs/*M
+	rm $SITE_ROOT/logs/*
 	truncate -s 0 $SITE_ROOT/logs/*
 	truncate -s 0 $SITE_ROOT/logs/access/*
 	truncate -s 0 $SITE_ROOT/logs/nginx/*
 	truncate -s 0 /var/log/atop/*
 	bash $SITE_ROOT/mbr node nodeinfo
 	rm /tmp/test_speed_* /tmp/check_speed
-	# _debug
+	_debug
 }
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
-	# apt-get update
-	# apt-get install -y ca-certificates curl git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb0 libmaxminddb-dev apt-utils
+
 	if [ -f "/usr/bin/systemctl" ]; then
 		systemctl enable supervisor
 		systemctl start supervisor
@@ -122,6 +109,9 @@ _supervisor() {
 	if [ "$MBR_MODE" != "docker" ]; then
 		supervisorctl update
 	fi
+	sleep 3
+	supervisorctl status
+
 }
 _install() {
 	_init >>$log_install
@@ -134,7 +124,7 @@ _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
 	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI | sed 's/\//\\\//g')
 	mkdir -p $SITE_ROOT/http.d
-	# $SITE_ROOT/mbr node nodeinfo
+
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
@@ -252,7 +242,7 @@ _register_node() {
 	rm -f $SITE_ROOT/http.d/*
 
 	$MBR node register
-	# $MBR node nodeinfo
+	$MBR node nodeinfo
 
 	supervisorctl status
 
@@ -281,34 +271,35 @@ _register_node() {
 	fi
 }
 _update_docker() {
+	_repo
 	if [ -n "$INSTALL_CMD" ]; then
 		tmp=$(mktemp)
 		echo "$INSTALL_CMD" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print "export",toupper($1)"="$2}' >$tmp
 		echo >>$tmp
-		source $tmp
+		source $tmp >/dev/null
 		rm $tmp
 
 	fi
 	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
-	if [ -n "$ENV" ]; then
-		$MBR node set ENV "$ENV"
-		$MBR node set MBR_ENV "$ENV"
-	fi
 	if [ -n "$MBR_ENV" ]; then
-		$MBR node set MBR_ENV "$MBR_ENV"
-		$MBR node set ENV "$MBR_ENV"
-	fi
 
-	cat >$SITE_ROOT/.env <<EOF
+		cat >$SITE_ROOT/.env <<EOF
 export GIT_PUBLIC_URL="https://github.com"
 export MBR_ENV=${MBR_ENV}
 EOF
+
+		cp $SITE_ROOT/.env $SITE_ROOT/.env_raw
+		$MBR node set MBR_ENV "$MBR_ENV"
+	fi
+
+	# 	cat >$SITE_ROOT/.env <<EOF
+	# export GIT_PUBLIC_URL="https://github.com"
+	# export MBR_ENV=${MBR_ENV}
+	# EOF
 	if [ -n "$ZONE" ]; then $MBR node set ZONE "$ZONE"; fi
 	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
 	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
 	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
-	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
-	if [ -n "$DATA_URI_WS" ]; then $MBR node set DATA_URI_WS "$DATA_URI_WS"; fi
 	# if [ -n "$TOKEN" ]; then $MBR node set TOKEN "$TOKEN"; fi
 	if [ -n "$BLOCKCHAIN" ]; then $MBR node set BLOCKCHAIN "$BLOCKCHAIN"; fi
 	if [ -n "$NETWORK" ]; then $MBR node set NETWORK "$NETWORK"; fi
@@ -317,19 +308,13 @@ EOF
 	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
 	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
 		$MBR node geo
-		$MBR node nodeinfo
 		_register_node
 		touch $SITE_ROOT/logs/install.done
 	fi
 }
 
 _update() {
-	if [ -n "$MBR_ENV" ]; then
-		cat >$SITE_ROOT/.env <<EOF
-export GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=$MBR_ENV
-EOF
-	fi
+	_repo
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
 	fi

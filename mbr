@@ -5,17 +5,25 @@ NODE_CONF_TMPL=$DIR/http.d
 TYPE=node
 VAR=$DIR/vars
 
+if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
+if [ -z "$MBR_ENV" ]; then
+	echo "MBR_ENV not defined"
+	exit 1
+else
+	if [ -f "$SITE_ROOT/.env.$MBR_ENV" ]; then source $SITE_ROOT/.env.$MBR_ENV >/dev/null; fi
+fi
+
 if [ ! -d "$VAR" ]; then
 	mkdir $VAR
 fi
-if [ -f "$VAR/ENV" ]; then
-	ENV=$(cat $VAR/ENV)
-fi
-if [ "x$ENV" == "x" ]; then
-	source $DIR/.env
-else
-	source $DIR/.env.${ENV}
-fi
+# if [ -f "$VAR/ENV" ]; then
+# 	ENV=$(cat $VAR/ENV)
+# fi
+# if [ "x$ENV" == "x" ]; then
+# 	source $DIR/.env
+# else
+# 	source $DIR/.env.${ENV}
+# fi
 
 cd $DIR
 
@@ -61,14 +69,14 @@ gw_apply() {
 
 	$DIR/scripts/run _reload
 }
-# gw_getkey() {
-# 	machine_id=$(cat /var/lib/dbus/machine-id)
-# 	mbrnodekey=$(curl -sk -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
-# 	echo $machine_id >$VAR/NODE_ID
-# 	echo $mbrnodekey >$VAR/NODE_KEY
-# 	echo "NODE_ID: $machine_id"
-# 	echo "NODE_KEY: $mbrnodekey"
-# }
+gw_getkey() {
+	machine_id=$(cat /var/lib/dbus/machine-id)
+	mbrnodekey=$(curl -sk -H "mbrnodeid: $machine_id" "$MBRAPI/api/v1/mbrnodekey")
+	echo $machine_id >$VAR/NODE_ID
+	echo $mbrnodekey >$VAR/NODE_KEY
+	echo "NODE_ID: $machine_id"
+	echo "NODE_KEY: $mbrnodekey"
+}
 gw_show() {
 	ls vars | while read key; do
 		val=$(cat vars/$key | sed 's/\//\\\//g')
@@ -125,11 +133,11 @@ gw_geo() {
 gw_nodeinfo() {
 	#	gw_apply
 	#	gw_nodekey
-	# USER_ID=$(cat $VAR/USER_ID)
+	USER_ID=$(cat $VAR/USER_ID)
 	# TOKEN=$(cat $VAR/TOKEN)
-	# NETWORK=$(cat $VAR/NETWORK)
-	# BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	# IP=$(cat $VAR/IP)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	IP=$(cat $VAR/IP)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
@@ -147,49 +155,41 @@ gw_nodeinfo() {
 	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$PORTAL_URL/mbr/$TYPE/$ID/info" >$VAR/RAW
-
+		"$PORTAL_URL/mbr/node/$ID/info" >$VAR/RAW
 	IP=$(cat $VAR/RAW | jq .geo.ip)
-	if [ -n "$IP" ]; then
-		echo $IP >$VAR/IP
-	fi
+	echo $IP >$VAR/IP
 	DATA_URI=$(cat $VAR/RAW | jq .dataSource)
-	if [ -n "$DATA_URI" ]; then
-		echo $DATA_URI >$VAR/DATA_URI
-	fi
-
+	echo $DATA_URI >$VAR/DATA_URI
 	DATA_URI_WS=$(cat $VAR/RAW | jq .dataSourceWs)
-	if [ -n "$DATA_URI_WS" ]; then
-		echo $DATA_URI_WS >$VAR/DATA_URI_WS
-	fi
+	echo $DATA_URI_WS >$VAR/DATA_URI_WS
 }
 
 gw_nodeverify() {
 	#	gw_apply
 	#	gw_nodekey
-	# USER_ID=$(cat $VAR/USER_ID)
+	USER_ID=$(cat $VAR/USER_ID)
 	# TOKEN=$(cat $VAR/TOKEN)
-	# NETWORK=$(cat $VAR/NETWORK)
-	# BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-	# IP=$(cat $VAR/IP)
+	NETWORK=$(cat $VAR/NETWORK)
+	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
+	IP=$(cat $VAR/IP)
 	ID=$(cat $VAR/ID)
 	APP_KEY=$(cat $VAR/APP_KEY)
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
-	# if [ -n "$IP" ]; then
-	# 	IP=$(curl -sk ipv4.icanhazip.com)
-	# 	n=$(grep -o "\." <<<"$IP" | wc -l)
-	# 	if [ $n -eq 3 ]; then
-	# 		echo $IP >$VAR/IP
-	# 	fi
+	if [ -n "$IP" ]; then
+		IP=$(curl -sk ipv4.icanhazip.com)
+		n=$(grep -o "\." <<<"$IP" | wc -l)
+		if [ $n -eq 3 ]; then
+			echo $IP >$VAR/IP
+		fi
 
-	# fi
+	fi
 
 	#echo "Your IP:$IP"
 
 	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$PORTAL_URL/mbr/$TYPE/$ID/verify"
+		"$PORTAL_URL/mbr/node/$ID/verify"
 }
 
 gw_register() {
@@ -212,7 +212,7 @@ gw_register() {
 	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$PORTAL_URL/mbr/$TYPE/$ID/register"
+		"$PORTAL_URL/mbr/node/$ID/register"
 
 }
 gw_unregister() {
@@ -228,7 +228,7 @@ gw_unregister() {
 	curl -sk \
 		-H "Content-Type: application/json" \
 		-H "Authorization: $APP_KEY" \
-		"$PORTAL_URL/mbr/$TYPE/$ID/unregister"
+		"$PORTAL_URL/mbr/node/$ID/unregister"
 
 }
 gw_set() {
