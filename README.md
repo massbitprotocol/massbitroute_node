@@ -2,6 +2,11 @@
 
 This component routes traffic from dapi to backend providers
 
+## Run with Docker
+
+```
+docker run -ti --rm  -e "MBR_ENV=shamu" -e "INSTALL_CMD=curl -sSfL 'https://portal.massbitroute.net/api/v1/node_install?id=a1f1c1a9-e7ad-4d29-ac71-0cb3b0c57225&user_id=b363ddf4-42cf-4ccf-89c2-8c42c531ac99&blockchain=eth&network=mainnet&zone=AS&data_url=http://34.81.232.186:8545&app_key=D61VyZiUcNX8DUWNvIyyBA&portal_url=https://portal.massbitroute.net&env=keiko" massbit/massbitroute_node_dev:0.0.1-shamu-dev  -n
+```
 
 ## System requirement
 

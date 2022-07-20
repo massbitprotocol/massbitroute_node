@@ -14,11 +14,10 @@ service_dir=$mbr_root/src/sites/services
 debug_log=$SITE_ROOT/logs/debug.log
 log_install=$SITE_ROOT/logs/install.log
 
-export GIT_PUBLIC_URL=${GIT_PUBLIC_URL:-"https://github.com"}
+export GIT_PUBLIC_URL="https://github.com"
 
 _repo() {
-	git -C $SITE_ROOT branch
-	cat $SITE_ROOT/.env_raw
+
 	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
 
 	if [ -z "$MBR_ENV" ]; then
@@ -280,22 +279,12 @@ _update_docker() {
 		rm $tmp
 
 	fi
-	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
 	if [ -n "$MBR_ENV" ]; then
-
-		cat >$SITE_ROOT/.env <<EOF
-export GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=${MBR_ENV}
-EOF
-
-		cp $SITE_ROOT/.env $SITE_ROOT/.env_raw
 		$MBR node set MBR_ENV "$MBR_ENV"
 	fi
+	$MBR node nodeinfo
+	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
 
-	# 	cat >$SITE_ROOT/.env <<EOF
-	# export GIT_PUBLIC_URL="https://github.com"
-	# export MBR_ENV=${MBR_ENV}
-	# EOF
 	if [ -n "$ZONE" ]; then $MBR node set ZONE "$ZONE"; fi
 	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
 	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
@@ -314,14 +303,24 @@ EOF
 }
 
 _update() {
+	echo "Update"
+	echo $TYPE >$SITE_ROOT/vars/TYPE
+
+	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
+
 	_repo
+	if [ -n "$MBR_ENV" ]; then
+		cat >$SITE_ROOT/.env <<EOF
+export GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=${MBR_ENV}
+EOF
+		cp $SITE_ROOT/.env $SITE_ROOT/.env_raw
+	fi
+
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
 	fi
-	echo node >vars/TYPE
 
-	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
-	echo "Update"
 	_st_update=0
 
 	_update_repos

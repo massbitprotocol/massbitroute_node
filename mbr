@@ -5,6 +5,10 @@ NODE_CONF_TMPL=$DIR/http.d
 TYPE=node
 VAR=$DIR/vars
 
+if [ ! -d "$VAR" ]; then
+	mkdir $VAR
+fi
+
 if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
 if [ -z "$MBR_ENV" ]; then
 	echo "MBR_ENV not defined"
@@ -12,18 +16,6 @@ if [ -z "$MBR_ENV" ]; then
 else
 	if [ -f "$SITE_ROOT/.env.$MBR_ENV" ]; then source $SITE_ROOT/.env.$MBR_ENV >/dev/null; fi
 fi
-
-if [ ! -d "$VAR" ]; then
-	mkdir $VAR
-fi
-# if [ -f "$VAR/ENV" ]; then
-# 	ENV=$(cat $VAR/ENV)
-# fi
-# if [ "x$ENV" == "x" ]; then
-# 	source $DIR/.env
-# else
-# 	source $DIR/.env.${ENV}
-# fi
 
 cd $DIR
 
@@ -83,21 +75,6 @@ gw_show() {
 		echo "$key: $val"
 	done
 }
-# gw_ping() {
-# 	#	gw_apply
-# 	#	gw_nodekey
-# 	USER_ID=$(cat $VAR/USER_ID)
-# 	ID=$(cat $VAR/ID)
-# 	# TOKEN=$(cat $VAR/TOKEN)
-# 	NETWORK=$(cat $VAR/NETWORK)
-# 	BLOCKCHAIN=$(cat $VAR/BLOCKCHAIN)
-# 	curl -sk \
-# 		-X POST \
-# 		-H "Content-Type: application/json" \
-# 		-d "{\"blockchain\":\"$BLOCKCHAIN\", \"network\":\"$NETWORK\", \"id\":\"$ID\" , \"token\":\"$TOKEN\" , \"user_id\":\"$USER_ID\"}" \
-# 		"$MBRAPI/api/v1/?action=${TYPE}.ping"
-
-# }
 
 gw_geo() {
 	PORTAL_URL=$(cat $VAR/PORTAL_URL)
