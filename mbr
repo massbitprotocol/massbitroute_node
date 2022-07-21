@@ -1,5 +1,6 @@
 #!/bin/bash
 DIR=$(dirname $(realpath $0))
+SITE_ROOT=$DIR
 NODE_CONF_HTTP_TMPL=$DIR/http.d/local
 NODE_CONF_TMPL=$DIR/http.d
 TYPE=node
