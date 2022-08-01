@@ -7,6 +7,7 @@ export HOME=$SITE_ROOT
 
 source $SITE_ROOT/scripts/base.sh >/dev/null
 cd $SITE_ROOT
+curl="/usr/bin/curl -skSfL"
 
 mbr_root=/massbit/massbitroute/app
 service_dir=$mbr_root/src/sites/services
@@ -128,7 +129,7 @@ _load_config() {
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
 
-	curl -skSfL $PORTAL_URL/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
+	$curl $PORTAL_URL/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
@@ -171,7 +172,7 @@ _add_host_file() {
 	fi
 	sed '/</d' /etc/hosts -i /etc/hosts.bk
 	cat /etc/hosts.bk >/tmp/hosts
-	curl -s $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
+	$curl $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
 	if [ -f "/tmp/hosts.1" ]; then
 		cat /tmp/hosts.1 >>/tmp/hosts
 		cat /tmp/hosts >/etc/hosts
