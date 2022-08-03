@@ -325,7 +325,7 @@ EOF
 	_st_update=0
 
 	# _update_repos
-	_st_update=$?
+	# _st_update=$?
 
 	_load_config
 	_st=$?
