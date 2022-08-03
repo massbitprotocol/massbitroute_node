@@ -1,30 +1,35 @@
 #!/bin/bash
 TYPE="node"
 SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
-
+MBR=$SITE_ROOT/mbr
+export DEBIAN_FRONTEND=noninteractive
 export HOME=$SITE_ROOT
 
-if [ -e "$SITE_ROOT/cmd_server" ]; then bash $SITE_ROOT/cmd_server _env; fi
-if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
-
-source $SITE_ROOT/scripts/base.sh
-# _load_env $SITE_ROOT
+source $SITE_ROOT/scripts/base.sh >/dev/null
 cd $SITE_ROOT
+curl="/usr/bin/curl -skSfL"
 
 mbr_root=/massbit/massbitroute/app
 service_dir=$mbr_root/src/sites/services
 
+debug_log=$SITE_ROOT/logs/debug.log
 log_install=$SITE_ROOT/logs/install.log
-GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=${MBR_ENV:-dev}
+
+export GIT_PUBLIC_URL="https://github.com"
+
 _repo() {
+
+	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
+
+	if [ -z "$MBR_ENV" ]; then
+		echo "MBR_ENV not defined"
+		exit 1
+	else
+		if [ -f "$SITE_ROOT/.env.$MBR_ENV" ]; then source $SITE_ROOT/.env.$MBR_ENV >/dev/null; fi
+	fi
 	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
 $SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
 $service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
-
-	if [ -n "$GIT_PRIVATE_READ_URL" ]; then
-		REPOS="$REPOS $SITE_ROOT/${TYPE}deploy|$GIT_PRIVATE_READ_URL/massbitroute/${TYPE}deploy.git|$MBR_ENV"
-	fi
 
 }
 _repo
@@ -34,12 +39,15 @@ _debug() {
 }
 
 _tune() {
-	echo 2000000 >/proc/sys/fs/nr_open
-	echo 2000000 >/proc/sys/fs/file-max
-	ulimit -n 2000000
-	cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
-	cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
-	sysctl -p
+	if [ "$MBR_MODE" != "docker" ]; then
+		echo 2000000 >/proc/sys/fs/nr_open
+		echo 2000000 >/proc/sys/fs/file-max
+		ulimit -n 2000000
+		cp /massbit/massbitroute/app/gbc/conf/limits.conf /etc/security/limits.d/mbr.conf
+		cp /massbit/massbitroute/app/gbc/conf/sysctl.conf /etc/sysctl.d/99-mbr.conf
+		sysctl -p
+	fi
+
 	cat >/etc/logrotate.d/massbit <<EOF
 $SITE_ROOT/logs/access/*.log
 $SITE_ROOT/logs/nginx/*.log
@@ -59,19 +67,11 @@ EOF
 }
 
 _init() {
-	if [ ! -f "$SITE_ROOT/.env" ]; then
-		echo "$MBR_ENV" >$SITE_ROOT/.env
-	fi
-	source $SITE_ROOT/.env
 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
-	bash $SITE_ROOT/cmd_server _env
-	source $SITE_ROOT/.env_raw
-	_repo
 }
 _prepare() {
 	echo "Prepare"
 	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/error $SITE_ROOT/logs/access $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
-	# rm -rf $SITE_ROOT/tmp/*
 
 }
 
@@ -86,25 +86,32 @@ _install_repos() {
 	done
 }
 _maintain() {
-	rm $SITE_ROOT/logs/*M
+	rm $SITE_ROOT/logs/*
 	truncate -s 0 $SITE_ROOT/logs/*
 	truncate -s 0 $SITE_ROOT/logs/access/*
 	truncate -s 0 $SITE_ROOT/logs/nginx/*
 	truncate -s 0 /var/log/atop/*
 	bash $SITE_ROOT/mbr node nodeinfo
-	rm /tmp/test_speed_* /tmp/check_speed
+	# rm /tmp/test_speed_* /tmp/check_speed
 	_debug
 }
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
-	apt-get update
-	apt-get install -y git apache2-utils supervisor jq python-is-python2 libssl-dev libmaxminddb-dev
-	systemctl enable supervisor
-	systemctl start supervisor
+
+	if [ -f "/usr/bin/systemctl" ]; then
+		systemctl enable supervisor
+		systemctl start supervisor
+	fi
+
 	mkdir -p /etc/supervisor/conf.d
 	cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
-	supervisorctl update
+	if [ "$MBR_MODE" != "docker" ]; then
+		supervisorctl update
+	fi
+	sleep 3
+	supervisorctl status
+
 }
 _install() {
 	_init >>$log_install
@@ -115,13 +122,14 @@ _install() {
 
 _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
+	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI | sed 's/\//\\\//g')
 	mkdir -p $SITE_ROOT/http.d
-	# $SITE_ROOT/mbr node nodeinfo
+
 	is_reloading=0
 	id=$(cat $SITE_ROOT/vars/ID)
 	if [ -z "$id" ]; then return $is_reloading; fi
 
-	curl -skSfL $PORTAL_URL/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
+	$curl $PORTAL_URL/deploy/${TYPE}conf/${id}.conf -o http.d/${id}.conf.new >/dev/null
 	if [ ! -f "http.d/${id}.conf" ]; then
 		touch http.d/${id}.conf
 	fi
@@ -131,8 +139,28 @@ _load_config() {
 		mv http.d/${id}.conf.new http.d/${id}.conf
 		is_reloading=1
 	fi
-	sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
-	sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+
+	if [ -n "$DATA_URI" ]; then
+		if [ -f "http.d/${id}.conf" ]; then
+			sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/${id}.conf
+		fi
+
+		if [ -f "http.d/node.conf0" ]; then
+			sed -i "s/proxy_pass ;/proxy_pass $DATA_URI;/g" http.d/node.conf0
+		fi
+	fi
+	if [ -n "$id" ]; then
+		if [ -f "etc/node.conf" ]; then
+			sed "s/__NODE_ID__/$id/g" etc/node.conf >http.d/node.conf0
+		fi
+
+	fi
+
+	if [ -n "$DOMAIN" ]; then
+		if [ -f "http.d/node.conf0" ]; then
+			sed -i "s/__DOMAIN__/$DOMAIN/g" http.d/node.conf0
+		fi
+	fi
 
 	$SITE_ROOT/cmd_server start all
 	return $is_reloading
@@ -144,7 +172,7 @@ _add_host_file() {
 	fi
 	sed '/</d' /etc/hosts -i /etc/hosts.bk
 	cat /etc/hosts.bk >/tmp/hosts
-	curl -s $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
+	$curl $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
 	if [ -f "/tmp/hosts.1" ]; then
 		cat /tmp/hosts.1 >>/tmp/hosts
 		cat /tmp/hosts >/etc/hosts
@@ -157,24 +185,15 @@ _reload() {
 	_maintain
 
 	id=$(cat $SITE_ROOT/vars/ID)
-	_sc=$SITE_ROOT/${TYPE}deploy/debug/${id}.sh
-	echo "Script path:$_sc" | tee -a $deploy_log
-	if [ -f "$_sc" ]; then
-		echo "is exists" | tee -a $deploy_log
-		bash $_sc $SITE_ROOT | tee -a $debug_log
-	fi
-	# if [ -f "$SITE_ROOT/logs/1024M" ]; then
-	# 	rm $SITE_ROOT/logs/1024M
-	# fi
-	# if [ ! -f "$SITE_ROOT/logs/128M" ]; then
-	# 	dd if=/dev/zero of=$SITE_ROOT/logs/128M bs=128M count=1
+	# _sc=$(mktemp)
+	# curl -sk $PORTAL_URL/deploy/info/debug/$TYPE/${id} -o $_sc >/dev/null
+	# if [ $? -eq 0 ]; then
+	# 	echo "Script path:$_sc" | tee -a $debug_log
+	# 	bash $_sc $SITE_ROOT | tee -a $debug_log
 	# fi
 
-	# if [ ! -f "$SITE_ROOT/vars/RAW" ]; then
-	# 	bash $SITE_ROOT/mbr node nodeinfo
-	# fi
-
-	_add_host_file
+	# rm $_sc
+	# _add_host_file
 	if [ ! -L "/etc/letsencrypt" ]; then
 		rm -rf /etc/letsencrypt
 		ln -sf $SITE_ROOT/ssl /etc/letsencrypt
@@ -183,10 +202,12 @@ _reload() {
 	# if [ -f "/etc/logrotate.d/massbit" ]; then
 	# 	logrotate -vf /etc/logrotate.d/massbit
 	# fi
-	systemctl | awk '/apt/{print $1}' | while read _s; do
-		systemctl stop $_s
-		systemctl disable $_s
-	done
+	if [ -f "/usr/bin/systemctl" ]; then
+		systemctl | awk '/apt/{print $1}' | while read _s; do
+			systemctl stop $_s
+			systemctl disable $_s
+		done
+	fi
 	# $service_dir/mkagent/agents/push.sh _kill
 
 	pkill -f "worker process is shutting down"
@@ -195,6 +216,12 @@ _reload() {
 	$SITE_ROOT/cmd_server _update
 	$SITE_ROOT/cmd_server update
 	$SITE_ROOT/cmd_server start all
+
+	chmod +x $SITE_ROOT/bin/openresty/nginx/sbin/nginx
+	nginx="$SITE_ROOT/bin/openresty/nginx/sbin/nginx -c $SITE_ROOT/tmp/nginx.conf"
+	msg="$($nginx -t 2>&1 | tr -s '\n' ' ')"
+	st=$?
+	echo $st nginx_check - "$msg" >/tmp/nginx_check
 
 }
 
@@ -205,9 +232,96 @@ _update_repos() {
 	return $_st_repo
 }
 
+_nodeverify() {
+	res=$($MBR node nodeverify | tail -1 | jq ".status,.message" | sed -z "s/\"//g;")
+	echo $res
+}
+_register_node() {
+	SCRIPTS_RUN="$SITE_ROOT/scripts/run"
+
+	rm -f $SITE_ROOT/http.d/*
+
+	$MBR node register
+	$MBR node nodeinfo
+
+	supervisorctl status
+
+	$SCRIPTS_RUN _load_config
+	$SITE_ROOT/cmd_server _update
+
+	$SITE_ROOT/cmd_server status
+
+	res=$($MBR node nodeverify)
+	status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
+	while [ "$status" != "verified" ]; do
+		git -C $SITE_ROOT pull origin $MBR_ENV
+		message=$(echo $res | jq ".message")
+		if [ "$message" != "null" ]; then
+			echo "Verifying with message: $message"
+		fi
+		sleep 10
+		$SCRIPTS_RUN _load_config
+		$SITE_ROOT/cmd_server _update
+		res=$($MBR node nodeverify)
+		status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
+	done
+
+	if [ "$status" = "verified" ]; then
+		echo "Node installed successfully !"
+	fi
+}
+_update_docker() {
+	_repo
+	if [ -n "$INSTALL_CMD" ]; then
+		tmp=$(mktemp)
+		echo "$INSTALL_CMD" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print "export",toupper($1)"="$2}' >$tmp
+		echo >>$tmp
+		source $tmp >/dev/null
+		rm $tmp
+
+	fi
+	if [ -n "$MBR_ENV" ]; then
+		$MBR node set MBR_ENV "$MBR_ENV"
+	fi
+	$MBR node nodeinfo
+	if [ -n "$DATA_URI" ]; then $MBR node set DATA_URI "$DATA_URI"; fi
+
+	if [ -n "$ZONE" ]; then $MBR node set ZONE "$ZONE"; fi
+	if [ -n "$ID" ]; then $MBR node set ID "$ID"; fi
+	if [ -n "$USER_ID" ]; then $MBR node set USER_ID "$USER_ID"; fi
+	if [ -n "$IP" ]; then $MBR node set IP "$IP"; fi
+
+	if [ -n "$BLOCKCHAIN" ]; then $MBR node set BLOCKCHAIN "$BLOCKCHAIN"; fi
+	if [ -n "$NETWORK" ]; then $MBR node set NETWORK "$NETWORK"; fi
+	if [ -n "$APP_KEY" ]; then $MBR node set APP_KEY "$APP_KEY"; fi
+	if [ -n "$SITE_ROOT" ]; then $MBR node set SITE_ROOT "$SITE_ROOT"; fi
+	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
+	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
+		$MBR node geo
+		_register_node
+		touch $SITE_ROOT/logs/install.done
+	fi
+}
+
 _update() {
-	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
 	echo "Update"
+	echo $TYPE >$SITE_ROOT/vars/TYPE
+
+	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
+
+	_repo
+	if [ -n "$MBR_ENV" ]; then
+		cat >$SITE_ROOT/.env <<EOF
+export GIT_PUBLIC_URL="https://github.com"
+export MBR_ENV=${MBR_ENV}
+EOF
+		cp $SITE_ROOT/.env $SITE_ROOT/.env_raw
+	fi
+
+	if [ "$MBR_MODE" == "docker" ]; then
+		_update_docker 2>&1 >>$log_install
+	fi
+
 	_st_update=0
 
 	_update_repos
@@ -223,7 +337,6 @@ _update() {
 }
 
 _monitor() {
-	echo node >vars/TYPE
 
 	_update
 	_st_monitor=$?

@@ -1,0 +1,29 @@
+# version: "2"
+services:
+  node:
+    privileged: true
+    restart: unless-stopped
+    # image: ubuntu:20.04
+    image: massbit/massbitroute_node
+
+    # command: 'sleep infinity'
+    command: ""
+    build:
+      context: ./build
+      dockerfile: Dockerfile
+      args:
+        BRANCH: keiko
+    network_mode: "host"
+    volumes:
+      - ./logs:/massbit/massbitroute/app/src/sites/services/node/logs:rw
+      - ./vars:/massbit/massbitroute/app/src/sites/services/node/vars:rw
+    environment:
+      - MBR_ENV=keiko
+      - ID=
+      - USER_ID=
+      - BLOCKCHAIN=
+      - NETWORK
+      - ZONE=
+      - DATA_URL=
+      - APP_KEY=
+      - INSTALL_CMD=
