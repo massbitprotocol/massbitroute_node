@@ -17,22 +17,35 @@ log_install=$SITE_ROOT/logs/install.log
 
 export GIT_PUBLIC_URL="https://github.com"
 
-_repo() {
-
-	if [ -f "$SITE_ROOT/.env_raw" ]; then source $SITE_ROOT/.env_raw >/dev/null; fi
-
+_save_env() {
 	if [ -z "$MBR_ENV" ]; then
-		echo "MBR_ENV not defined"
+		echo "MBR_ENV missing"
+		exit 1
+	fi
+
+	if [ -z "$PORTAL_URL" ]; then
+		echo "PORTAL_URL missing"
 		exit 1
 	else
-		if [ -f "$SITE_ROOT/.env.$MBR_ENV" ]; then source $SITE_ROOT/.env.$MBR_ENV >/dev/null; fi
+		echo $PORTAL_URL >$SITE_ROOT/vars/PORTAL_URL
 	fi
-	REPOS="$mbr_root/gbc|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git|$MBR_ENV \
-$SITE_ROOT|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_${TYPE}.git|$MBR_ENV \
-$service_dir/mkagent|$GIT_PUBLIC_URL/massbitprotocol/massbitroute_mkagent.git|$MBR_ENV"
-
+	if [ -z "$DOMAIN" ]; then
+		DOMAIN=$(echo $PORTAL_URL | cut -d'.' -f2-)
+	fi
+	if [ -z "$DOMAIN" ]; then
+		echo "DOMAIN missing"
+		exit 1
+	else
+		echo $DOMAIN >$SITE_ROOT/vars/DOMAIN
+	fi
 }
-_repo
+_repo() {
+	if [ -z "$MBR_ENV" ]; then
+		echo "MBR_ENV missing"
+		exit 1
+	fi
+	REPOS=""
+}
 
 _debug() {
 	timeout 30 $SITE_ROOT/scripts/debug.sh
@@ -66,35 +79,35 @@ $SITE_ROOT/logs/*.log {
 EOF
 }
 
-_init() {
-	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
-}
+# _init() {
+# 	_git_clone $GIT_PUBLIC_URL/massbitprotocol/massbitroute_gbc.git /massbit/massbitroute/app/gbc
+# }
 _prepare() {
 	echo "Prepare"
 	mkdir -p $SITE_ROOT/etc $SITE_ROOT/logs/error $SITE_ROOT/logs/access $SITE_ROOT/logs/nginx $SITE_ROOT/db $SITE_ROOT/tmp $SITE_ROOT/http.d
 
 }
 
-_install_repos() {
-	_git_config
-	_repo
-	for _pathgit in $REPOS; do
-		_path=$(echo $_pathgit | cut -d'|' -f1)
-		_url=$(echo $_pathgit | cut -d'|' -f2)
-		_branch=$(echo $_pathgit | cut -d'|' -f3)
-		_git_clone $_url $_path $_branch
-	done
-}
-_maintain() {
-	rm $SITE_ROOT/logs/*
-	truncate -s 0 $SITE_ROOT/logs/*
-	truncate -s 0 $SITE_ROOT/logs/access/*
-	truncate -s 0 $SITE_ROOT/logs/nginx/*
-	truncate -s 0 /var/log/atop/*
-	bash $SITE_ROOT/mbr node nodeinfo
-	# rm /tmp/test_speed_* /tmp/check_speed
-	_debug
-}
+# _install_repos() {
+# 	_git_config
+# 	_repo
+# 	for _pathgit in $REPOS; do
+# 		_path=$(echo $_pathgit | cut -d'|' -f1)
+# 		_url=$(echo $_pathgit | cut -d'|' -f2)
+# 		_branch=$(echo $_pathgit | cut -d'|' -f3)
+# 		_git_clone $_url $_path $_branch
+# 	done
+# }
+# _maintain() {
+# 	rm $SITE_ROOT/logs/*
+# 	truncate -s 0 $SITE_ROOT/logs/*
+# 	truncate -s 0 $SITE_ROOT/logs/access/*
+# 	truncate -s 0 $SITE_ROOT/logs/nginx/*
+# 	truncate -s 0 /var/log/atop/*
+# 	bash $SITE_ROOT/mbr node nodeinfo
+# 	# rm /tmp/test_speed_* /tmp/check_speed
+# 	_debug
+# }
 _supervisor() {
 	ln -sf /massbit/massbitroute/app/gbc /massbit/massbitroute/app/src/gbc
 	ln -sf /massbit/massbitroute/app/gbc/bin/openresty /usr/local/openresty
@@ -113,10 +126,25 @@ _supervisor() {
 	supervisorctl status
 
 }
+_install_repos() {
+	if [ -z "$MBR_ENV" ]; then
+		echo "MBR_ENV missing"
+		exit 1
+	fi
+	_repo
+	_install_sources $REPOS
+	_install_status=$?
+	return $_install_status
+}
+
+_install_one() {
+	_prepare
+	_install_repos
+}
 _install() {
-	_init >>$log_install
-	_prepare >>$log_install
-	_install_repos >>$log_install
+	# _init >>$log_install
+	# _prepare >>$log_install
+	_install_one >>$log_install
 	_supervisor >>$log_install
 }
 
@@ -165,24 +193,24 @@ _load_config() {
 	$SITE_ROOT/cmd_server start all
 	return $is_reloading
 }
-_add_host_file() {
-	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
-	if [ ! -f "/etc/hosts.bk" ]; then
-		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
-	fi
-	sed '/</d' /etc/hosts -i /etc/hosts.bk
-	cat /etc/hosts.bk >/tmp/hosts
-	$curl $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
-	if [ -f "/tmp/hosts.1" ]; then
-		cat /tmp/hosts.1 >>/tmp/hosts
-		cat /tmp/hosts >/etc/hosts
-		rm /tmp/hosts.1
-	fi
-}
+# _add_host_file() {
+# 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
+# 	if [ ! -f "/etc/hosts.bk" ]; then
+# 		sed '/.mbr/d' /etc/hosts >/etc/hosts.bk
+# 	fi
+# 	sed '/</d' /etc/hosts -i /etc/hosts.bk
+# 	cat /etc/hosts.bk >/tmp/hosts
+# 	$curl $PORTAL_URL/deploy/info/hosts -o /tmp/hosts.1
+# 	if [ -f "/tmp/hosts.1" ]; then
+# 		cat /tmp/hosts.1 >>/tmp/hosts
+# 		cat /tmp/hosts >/etc/hosts
+# 		rm /tmp/hosts.1
+# 	fi
+# }
 
 _reload() {
 
-	_maintain
+	# _maintain
 
 	id=$(cat $SITE_ROOT/vars/ID)
 	# _sc=$(mktemp)
@@ -305,18 +333,9 @@ _update_docker() {
 
 _update() {
 	echo "Update"
-	echo $TYPE >$SITE_ROOT/vars/TYPE
+	_save_env
 
-	mkdir -p $SITE_ROOT/logs/error $SITE_ROOT/logs/access
-
-	_repo
-	if [ -n "$MBR_ENV" ]; then
-		cat >$SITE_ROOT/.env <<EOF
-export GIT_PUBLIC_URL="https://github.com"
-export MBR_ENV=${MBR_ENV}
-EOF
-		cp $SITE_ROOT/.env $SITE_ROOT/.env_raw
-	fi
+	_prepare
 
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
@@ -324,8 +343,8 @@ EOF
 
 	_st_update=0
 
-	_update_repos
-	_st_update=$?
+	# _update_repos
+	# _st_update=$?
 
 	_load_config
 	_st=$?
@@ -345,19 +364,15 @@ _monitor() {
 		$0 _reload
 	fi
 
-	# cp supervisor.conf /etc/supervisor/conf.d/${TYPE}.conf
-	# supervisorctl updat
 	echo $(date +%s) >/tmp/mbr_monitor_updated
 }
 
 _run() {
-	_t1=$(date +%s)
-	echo "$(date):Start monitor"
+
 	rm -rf $SITE_ROOT/tmp/*
+	_prepare
 	$SITE_ROOT/start_server
-	_t2=$(date +%s)
-	_t=$(expr $_t2 - $_t1)
-	echo "$(date): End monitor. elapse $_t seconds"
+
 }
 
 $@
