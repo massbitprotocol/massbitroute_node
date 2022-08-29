@@ -281,7 +281,8 @@ _register_node() {
 
 	res=$($MBR node nodeverify)
 	status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
-	while [ "$status" != "verified" ]; do
+	verified=0
+	while [ \( "$status" != "verified" \) -a \( "$status" != "approved" \) -a \( "$status" != "stacked" \) ]; do
 		git -C $SITE_ROOT pull origin $MBR_ENV
 		message=$(echo $res | jq ".message")
 		if [ "$message" != "null" ]; then
@@ -294,7 +295,8 @@ _register_node() {
 		status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
 	done
 
-	if [ "$status" = "verified" ]; then
+	if [ \( "$status" == "verified" \) -o \( "$status" == "approved" \) -o \( "$status" == "stacked" \) ]; do
+	    
 		echo "Node installed successfully !"
 	fi
 }
