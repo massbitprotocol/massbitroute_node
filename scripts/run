@@ -295,8 +295,7 @@ _register_node() {
 		status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
 	done
 
-	if [ \( "$status" == "verified" \) -o \( "$status" == "approved" \) -o \( "$status" == "stacked" \) ]; do
-	    
+	if [ \( "$status" == "verified" \) -o \( "$status" == "approved" \) -o \( "$status" == "stacked" \) ]; then
 		echo "Node installed successfully !"
 	fi
 }
