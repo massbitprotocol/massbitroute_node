@@ -37,6 +37,11 @@ _save_env() {
 		exit 1
 	else
 		echo $DOMAIN >$SITE_ROOT/vars/DOMAIN
+		cat >$SITE_ROOT/src/env.lua <<EOF
+return {
+["DOMAIN"] = "$DOMAIN"
+}
+EOF
 	fi
 }
 _repo() {
@@ -377,6 +382,7 @@ _monitor() {
 _run() {
 
 	rm -rf $SITE_ROOT/tmp/*
+	_save_env
 	_prepare
 	$SITE_ROOT/start_server
 
