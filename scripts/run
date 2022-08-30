@@ -328,11 +328,12 @@ _update_docker() {
 	if [ -n "$APP_KEY" ]; then $MBR node set APP_KEY "$APP_KEY"; fi
 	if [ -n "$SITE_ROOT" ]; then $MBR node set SITE_ROOT "$SITE_ROOT"; fi
 	if [ -n "$PORTAL_URL" ]; then $MBR node set PORTAL_URL "$PORTAL_URL"; fi
-	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
+	_done_file=/var/run/install.done
+	if [ ! -f "$_done_file" ]; then
 		$MBR node geo
 		_register_node
 		if [ $? -eq 0 ]; then
-			touch $SITE_ROOT/logs/install.done
+			touch $_done_file
 		fi
 	fi
 }
