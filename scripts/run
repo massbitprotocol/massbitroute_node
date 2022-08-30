@@ -265,6 +265,7 @@ _nodeverify() {
 	echo $res
 }
 _register_node() {
+	_register_status=1
 	SCRIPTS_RUN="$SITE_ROOT/scripts/run"
 
 	rm -f $SITE_ROOT/http.d/*
@@ -295,10 +296,11 @@ _register_node() {
 		status=$(echo $res | jq ".status" | sed -z "s/\"//g;")
 	done
 
-
 	if [ \( "$status" == "verified" \) -o \( "$status" == "approved" \) -o \( "$status" == "staked" \) ]; then
+		_register_status=0
 		echo "Node installed successfully !"
 	fi
+	return $_register_status
 }
 _update_docker() {
 	_repo
@@ -329,7 +331,9 @@ _update_docker() {
 	if [ ! -f "$SITE_ROOT/logs/install.done" ]; then
 		$MBR node geo
 		_register_node
-		touch $SITE_ROOT/logs/install.done
+		if [ $? -eq 0 ]; then
+			touch $SITE_ROOT/logs/install.done
+		fi
 	fi
 }
 
