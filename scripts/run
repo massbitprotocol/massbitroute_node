@@ -306,7 +306,7 @@ _update_docker() {
 	_repo
 	if [ -n "$INSTALL_CMD" ]; then
 		tmp=$(mktemp)
-		echo "$INSTALL_CMD" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print "export",toupper($1)"="$2}' >$tmp
+		echo "$INSTALL_CMD" | sed 's/\"//g' | sed "s/\'//g" | cut -d'?' -f2 | tr -s '&' '\n' | awk -F'=' '{print "export",toupper($1)"="$2}' >$tmp
 		echo >>$tmp
 		source $tmp >/dev/null
 		rm $tmp
