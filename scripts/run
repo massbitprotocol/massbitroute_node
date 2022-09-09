@@ -27,11 +27,19 @@ _save_env() {
 		fi
 	fi
 
-	if [ -z "$PORTAL_URL" ]; then
-		echo "PORTAL_URL missing"
-		exit 1
-	else
+	if [ -n "$PORTAL_URL" ]; then
 		echo $PORTAL_URL >$SITE_ROOT/vars/PORTAL_URL
+	fi
+
+	if [ -z "$PORTAL_URL" ]; then
+		if [ -f "$SITE_ROOT/vars/PORTAL_URL" ]; then
+			export PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
+		else
+			echo "PORTAL_URL missing"
+			exit 1
+		fi
+	else
+
 	fi
 	if [ -z "$DOMAIN" ]; then
 		DOMAIN=$(echo $PORTAL_URL | cut -d'.' -f2-)
