@@ -19,8 +19,12 @@ export GIT_PUBLIC_URL="https://github.com"
 
 _save_env() {
 	if [ -z "$MBR_ENV" ]; then
-		echo "MBR_ENV missing"
-		exit 1
+		if [ -f "$SITE_ROOT/vars/MBR_ENV" ]; then
+			export MBR_ENV=$(cat $SITE_ROOT/vars/MBR_ENV)
+		else
+			echo "MBR_ENV missing"
+			exit 1
+		fi
 	fi
 
 	if [ -z "$PORTAL_URL" ]; then
@@ -46,8 +50,12 @@ EOF
 }
 _repo() {
 	if [ -z "$MBR_ENV" ]; then
-		echo "MBR_ENV missing"
-		exit 1
+		if [ -f "$SITE_ROOT/vars/MBR_ENV" ]; then
+			export MBR_ENV=$(cat $SITE_ROOT/vars/MBR_ENV)
+		else
+			echo "MBR_ENV missing"
+			exit 1
+		fi
 	fi
 	REPOS=""
 }
