@@ -18,6 +18,10 @@ log_install=$SITE_ROOT/logs/install.log
 export GIT_PUBLIC_URL="https://github.com"
 
 _save_env() {
+	if [ -n "$MBR_ENV" ]; then
+		echo $MBR_ENV >$SITE_ROOT/vars/MBR_ENV
+	fi
+
 	if [ -z "$MBR_ENV" ]; then
 		if [ -f "$SITE_ROOT/vars/MBR_ENV" ]; then
 			export MBR_ENV=$(cat $SITE_ROOT/vars/MBR_ENV)
@@ -38,23 +42,29 @@ _save_env() {
 			echo "PORTAL_URL missing"
 			exit 1
 		fi
-	else
+	fi
 
+	if [ -z "$DOMAIN" ]; then
+		if [ -f "$SITE_ROOT/vars/DOMAIN" ]; then
+			export DOMAIN=$(cat $SITE_ROOT/vars/DOMAIN)
+		fi
 	fi
 	if [ -z "$DOMAIN" ]; then
 		DOMAIN=$(echo $PORTAL_URL | cut -d'.' -f2-)
 	fi
+
 	if [ -z "$DOMAIN" ]; then
 		echo "DOMAIN missing"
 		exit 1
-	else
-		echo $DOMAIN >$SITE_ROOT/vars/DOMAIN
-		cat >$SITE_ROOT/src/env.lua <<EOF
+	fi
+
+	echo $DOMAIN >$SITE_ROOT/vars/DOMAIN
+	cat >$SITE_ROOT/src/env.lua <<EOF
 return {
 ["DOMAIN"] = "$DOMAIN"
 }
 EOF
-	fi
+
 }
 _repo() {
 	if [ -z "$MBR_ENV" ]; then
