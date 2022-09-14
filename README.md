@@ -2,11 +2,35 @@
 
 This component routes traffic from dapi to backend providers
 
+## Install with docker
+
+```
+  node:
+    privileged: true
+    restart: unless-stopped
+    image: massbit/massbitroute_node:_BRANCH_
+    build:
+      context: /massbit/massbitroute/app/src
+      dockerfile: install/mbr/build/node/Dockerfile
+      args:
+        GIT_PUBLIC_URL: https://github.com                        
+        #MYAPP_IMAGE: massbit/massbitroute_basenode:_BRANCH_                
+        BRANCH: _BRANCH_
+    container_name: mbr_node
+    environment:
+      - MBR_ENV=_BRANCH_                                               # Git Tag version deployment of Api repo
+      - MKAGENT_BRANCH=_BRANCH_                                        # Git Tag version deployment of Monitor client	
+      - INSTALL_CMD=https://portal.massbitroute.net/api/v1/node_install?id=139aa103-96fb-4000-8a5f-cc8650298037&user_id=b363ddf4-42cf-4ccf-89c2-8c42c531ac99&blockchain=eth&network=mainnet&zone=EU&data_url=http://34.81.232.186:8545&app_key=y8OaDKRL-vdBkd5zXNsSwA&portal_url=https://portal.massbitroute.net&env=_BRANCH_
+      - PORTAL_URL=http://portal.massbitroute.net    # portal url
+    extra_hosts:
+      - "portal.massbitroute.net:127.0.0.1" 
+	  ```
 ## Run with Docker
 
 ```
 docker run -ti --rm  -e "MBR_ENV=shamu" -e "INSTALL_CMD=curl -sSfL 'https://portal.massbitroute.net/api/v1/node_install?id=a1f1c1a9-e7ad-4d29-ac71-0cb3b0c57225&user_id=b363ddf4-42cf-4ccf-89c2-8c42c531ac99&blockchain=eth&network=mainnet&zone=AS&data_url=http://34.81.232.186:8545&app_key=D61VyZiUcNX8DUWNvIyyBA&portal_url=https://portal.massbitroute.net&env=keiko" massbit/massbitroute_node_dev:0.0.1-shamu-dev  -n
 ```
+
 
 ## System requirement
 
