@@ -18,6 +18,7 @@ log_install=$SITE_ROOT/logs/install.log
 export GIT_PUBLIC_URL="https://github.com"
 
 _save_env() {
+
 	if [ -n "$MBR_ENV" ]; then
 		echo $MBR_ENV >$SITE_ROOT/vars/MBR_ENV
 	fi
@@ -74,6 +75,7 @@ _repo() {
 			echo "MBR_ENV missing"
 			exit 1
 		fi
+
 	fi
 	REPOS=""
 }
