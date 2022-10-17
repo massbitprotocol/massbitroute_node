@@ -370,6 +370,7 @@ _update_docker() {
 }
 
 _update_tag() {
+	DOMAIN=$(cat $SITE_ROOT/vars/DOMAIN)
 	PORTAL_DOMAIN=portal.$DOMAIN
 	git="git -C $SITE_ROOT"
 	_v=$($git config --get remote.origin.url | awk -F'/' '{print $NF}')
