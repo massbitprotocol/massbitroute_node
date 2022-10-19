@@ -1,3 +1,3 @@
 export TYPE=node
-export DOMAIN=massbitroute.com
+export DOMAIN=massbitroute.net
 export MONITOR_SCHEME=http
