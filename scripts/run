@@ -178,7 +178,10 @@ _install() {
 	_install_one >>$log_install
 	_supervisor >>$log_install
 }
-
+_repo_update() {
+	git -C $service_dir/mkagent pull
+	git -C $mbr_root/gbc pull
+}
 _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
 	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI | sed 's/\//\\\//g')
@@ -402,6 +405,8 @@ _update() {
 	_save_env
 
 	_prepare
+
+	_repo_update
 
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
