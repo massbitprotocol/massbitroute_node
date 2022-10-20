@@ -4,7 +4,7 @@ SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 MBR=$SITE_ROOT/mbr
 export DEBIAN_FRONTEND=noninteractive
 export HOME=$SITE_ROOT
-
+source $SITE_ROOT/env/env.sh
 source $SITE_ROOT/scripts/base.sh >/dev/null
 cd $SITE_ROOT
 curl="/usr/bin/curl -skSfL"
