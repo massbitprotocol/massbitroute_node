@@ -389,6 +389,7 @@ _update_tag() {
 	rm $tmp
 
 	_my_tag=$($git describe --tags)
+	echo $_my_tag >$SITE_ROOT/logs/tag_current
 	_tag_update=0
 	if [ "$_tag" != "$_my_tag" ]; then
 		$git fetch --all --tags --prune
