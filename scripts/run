@@ -4,7 +4,7 @@ SITE_ROOT=$(realpath $(dirname $(realpath $0))/..)
 MBR=$SITE_ROOT/mbr
 export DEBIAN_FRONTEND=noninteractive
 export HOME=$SITE_ROOT
-
+source $SITE_ROOT/env/env.sh
 source $SITE_ROOT/scripts/base.sh >/dev/null
 cd $SITE_ROOT
 curl="/usr/bin/curl -skSfL"
@@ -180,7 +180,10 @@ _install() {
 	_install_one >>$log_install
 	_supervisor >>$log_install
 }
-
+_repo_update() {
+	git -C $service_dir/mkagent pull
+	git -C $mbr_root/gbc pull
+}
 _load_config() {
 	PORTAL_URL=$(cat $SITE_ROOT/vars/PORTAL_URL)
 	DATA_URI=$(cat $SITE_ROOT/vars/DATA_URI | sed 's/\//\\\//g')
@@ -371,11 +374,42 @@ _update_docker() {
 	fi
 }
 
+_update_tag() {
+	DOMAIN=$(cat $SITE_ROOT/vars/DOMAIN)
+	PORTAL_DOMAIN=portal.$DOMAIN
+	git="git -C $SITE_ROOT"
+	_v=$($git config --get remote.origin.url | awk -F'/' '{print $NF}')
+	tmp=$(mktemp)
+	curl -sfkL http://$PORTAL_DOMAIN/deploy/info/version/$_v >$tmp
+	if [ $? -ne 0 ]; then
+		rm $tmp
+		return 0
+	fi
+
+	_tag=$(cat $tmp)
+
+	rm $tmp
+
+	_my_tag=$($git describe --tags)
+	echo $_my_tag >$SITE_ROOT/logs/tag_current
+	_tag_update=0
+	if [ "$_tag" != "$_my_tag" ]; then
+		$git fetch --all --tags --prune
+		$git checkout $_tag
+		_tag_update=1
+	fi
+
+	return $_tag_update
+
+}
+
 _update() {
 	echo "Update"
 	_save_env
 
 	_prepare
+
+	_repo_update
 
 	if [ "$MBR_MODE" == "docker" ]; then
 		_update_docker 2>&1 >>$log_install
@@ -390,6 +424,15 @@ _update() {
 	_st=$?
 	if [ $_st_update -eq 0 ]; then
 		_st_update=$_st
+	fi
+	_update_tag
+	if [ $_st_update -eq 0 ]; then
+		_st_update=$?
+	fi
+
+	_update_tag
+	if [ $_st_update -eq 0 ]; then
+		_st_update=$?
 	fi
 
 	return $_st_update
