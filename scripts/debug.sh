@@ -61,7 +61,7 @@ find $SITE_ROOT/vars -type f | while read f; do echo $f $(cat $f) >>$debug_log; 
 # fi
 
 echo "----ENV" >>$debug_log
-cat $SITE_ROOT/.env_raw >>$debug_log
+cat $SITE_ROOT/env/env.sh >>$debug_log
 echo >>$debug_log
 
 # curl -I ${MBRAPI} >>$debug_log
