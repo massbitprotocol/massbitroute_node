@@ -8,22 +8,22 @@ source $SITE_ROOT/.env_raw
 # source $SITE_ROOT/scripts/base.sh
 # _load_env $SITE_ROOT
 debug_log=$SITE_ROOT/logs/debug.log
-_send_log() {
+# _send_log() {
 
-	id=$(cat $SITE_ROOT/vars/ID)
-	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/gateway/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
-	_f=$SITE_ROOT/logs/debug.log
-	_name=$(basename $_f)
-	if [ -f "$_f" ]; then
-		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
-	fi
-	_f=$SITE_ROOT/logs/install.log
-	_name=$(basename $_f)
-	if [ -f "$_f" ]; then
-		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
-	fi
+# 	id=$(cat $SITE_ROOT/vars/ID)
+# 	# curl -X POST https://monitor.mbr.${DOMAIN}/upload/gateway/${id}_monitor_client.log --data-binary @$log_dir/monitor_client.log
+# 	_f=$SITE_ROOT/logs/debug.log
+# 	_name=$(basename $_f)
+# 	if [ -f "$_f" ]; then
+# 		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
+# 	fi
+# 	_f=$SITE_ROOT/logs/install.log
+# 	_name=$(basename $_f)
+# 	if [ -f "$_f" ]; then
+# 		timeout 5 curl -X POST https://internal.monitor.mbr.${DOMAIN}/upload/$TYPE/$id/$_name --data-binary @$_f
+# 	fi
 
-}
+# }
 
 # truncate -s 0 $log_dir/*.log
 # truncate -s 0 $log_dir/nginx/*.log
@@ -105,4 +105,4 @@ $cmd nginx -T | tee -a $debug_log
 # 	bash $_sc $SITE_ROOT | tee -a $debug_log
 # fi
 
-_send_log
+#_send_log
