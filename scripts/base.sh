@@ -145,3 +145,16 @@ _timeout() {
 		$0 $@
 	fi
 }
+
+_install_test() {
+	apt update
+	apt install -y make
+	export PERL_MM_USE_DEFAULT=1
+	yes | cpan -i Test::Nginx
+	cd $SITE_ROOT
+	ls -d $SITE_ROOT/.cpan/build/* /root/.cpan/build/* | while read d; do
+		cd $d
+		make install
+		cd -
+	done
+}
