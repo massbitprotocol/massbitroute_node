@@ -473,6 +473,10 @@ _upgrade() {
 	ldconfig
 	cd $SITE_ROOT
 	ln -sfn /usr/local/gbc .
+	$SITE_ROOT/cmd_server nginx -t
+	$SITE_ROOT/cmd_server nginx -V
+	$SITE_ROOT/cmd_server status
+	supervisorctl status
 }
 _run() {
 
