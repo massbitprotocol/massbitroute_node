@@ -471,6 +471,8 @@ _upgrade() {
 	echo /root/.asdf/installs/openresty/$OPENRESTY_VERSION/lib >/etc/ld.so.conf.d/0openresty.conf
 	echo /root/.asdf/installs/openresty/$OPENRESTY_VERSION/luajit/lib >>/etc/ld.so.conf.d/0openresty.conf
 	ldconfig
+	cd $SITE_ROOT
+	ln -sfn /usr/local/gbc .
 }
 _run() {
 
